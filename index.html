@@ -208,9 +208,7 @@
     <div id="resultado" class="card resultado">
       <h2>📦 Información del domicilio</h2>
 
-      <div class="dato">📍 <strong>Recogida:</strong> <span id="resultadoOrigen"></span></div>
       <div class="dato">🏘️ <strong>Barrio de recogida:</strong> <span id="barrioOrigen"></span></div>
-      <div class="dato">📍 <strong>Entrega:</strong> <span id="resultadoDestino"></span></div>
       <div class="dato">🏘️ <strong>Barrio de entrega:</strong> <span id="barrioDestino"></span></div>
       <div class="dato">📏 <strong>Distancia:</strong> <span id="distancia"></span></div>
       <div class="dato">⏱️ <strong>Tiempo estimado:</strong> <span id="tiempo"></span></div>
@@ -446,8 +444,8 @@
 
       const texto =
         "Hola RápidoYa, quiero pedir un domicilio.\n\n" +
-        "Recogida: " + datosActuales.origen + "\n" +
-        "Entrega: " + datosActuales.destino + "\n" +
+        "Barrio de recogida: " + datosActuales.barrioOrigen + "\n" +
+        "Barrio de entrega: " + datosActuales.barrioDestino + "\n" +
         "Distancia: " + datosActuales.distancia + "\n" +
         "Tiempo estimado: " + datosActuales.tiempo + "\n" +
         "Precio: " + datosActuales.precio;
@@ -487,19 +485,20 @@
         const tiempoMin = Math.max(1, Math.round((ruta.duration || 0) / 60));
         const precio = calcularPrecio(distanciaKm);
 
+        const barrioOrigen = obtenerBarrio(origen.address);
+        const barrioDestino = obtenerBarrio(destino.address);
+
         mostrarRuta(origen, destino, ruta);
 
-        document.getElementById("resultadoOrigen").textContent = origen.display_name || origenTexto;
-        document.getElementById("barrioOrigen").textContent = obtenerBarrio(origen.address);
-        document.getElementById("resultadoDestino").textContent = destino.display_name || destinoTexto;
-        document.getElementById("barrioDestino").textContent = obtenerBarrio(destino.address);
+        document.getElementById("barrioOrigen").textContent = barrioOrigen;
+        document.getElementById("barrioDestino").textContent = barrioDestino;
         document.getElementById("distancia").textContent = distanciaKm.toFixed(1) + " km";
         document.getElementById("tiempo").textContent = tiempoMin + " min";
         document.getElementById("precio").textContent = precio;
 
         datosActuales = {
-          origen: origen.display_name || origenTexto,
-          destino: destino.display_name || destinoTexto,
+          barrioOrigen: barrioOrigen,
+          barrioDestino: barrioDestino,
           distancia: distanciaKm.toFixed(1) + " km",
           tiempo: tiempoMin + " min",
           precio: precio

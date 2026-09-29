@@ -3,520 +3,252 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>RápidoYa 🛵 - Domicilios en Tuluá</title>
-
+  <title>Tuluá Express - Domicilios</title>
+  
+  <!-- Leaflet CSS (Mapa interactivo) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
+  
   <style>
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #121212; color: #ffffff; padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    
+    header { text-align: center; margin-bottom: 15px; }
+    header h1 { color: #00ff88; font-size: 1.8rem; letter-spacing: 0.5px; }
+    header p { color: #aaaaaa; font-size: 0.9rem; margin-top: 3px; }
 
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f3f4f6;
-      color: #111827;
-    }
+    .container { width: 100%; max-width: 500px; background: #1e1e1e; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+    
+    .input-group { margin-bottom: 12px; }
+    .input-group label { display: block; font-size: 0.85rem; color: #00ff88; margin-bottom: 5px; font-weight: 600; }
+    .input-group input, .input-group textarea { width: 100%; padding: 11px; border-radius: 6px; border: 1px solid #333; background: #2a2a2a; color: #fff; font-size: 0.95rem; outline: none; }
+    .input-group input:focus, .input-group textarea:focus { border-color: #00ff88; }
+    
+    #map { height: 220px; width: 100%; border-radius: 8px; margin: 15px 0; border: 1px solid #333; }
+    
+    .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-primary { background: #00ff88; color: #000; }
+    .btn-primary:hover { background: #00cc6a; }
+    .btn-whatsapp { background: #25D366; color: #fff; margin-top: 10px; }
+    .btn-whatsapp:hover { background: #1ebc57; }
+    .btn-secondary { background: #444; color: #fff; margin-top: 8px; }
+    .btn-secondary:hover { background: #555; }
 
-    header {
-      background: #111827;
-      color: white;
-      padding: 20px;
-      text-align: center;
-    }
+    .result-box { background: #2a2a2a; padding: 15px; border-radius: 8px; text-align: center; margin-top: 15px; display: none; border: 1px solid #333; }
+    .result-box p { color: #ccc; font-size: 0.9rem; margin-bottom: 5px; }
+    .result-box h3 { color: #00ff88; font-size: 1.5rem; margin-bottom: 10px; }
 
-    header h1 {
-      margin: 0;
-      font-size: 30px;
-    }
-
-    header p {
-      margin: 7px 0 0;
-      color: #d1d5db;
-    }
-
-    .contenedor {
-      width: 95%;
-      max-width: 900px;
-      margin: 25px auto;
-    }
-
-    .card {
-      background: white;
-      border-radius: 15px;
-      padding: 20px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-      margin-bottom: 20px;
-    }
-
-    h2 { margin-top: 0; }
-
-    label {
-      display: block;
-      font-weight: bold;
-      margin-top: 15px;
-      margin-bottom: 6px;
-    }
-
-    input {
-      width: 100%;
-      padding: 14px;
-      border: 1px solid #d1d5db;
-      border-radius: 10px;
-      font-size: 16px;
-      outline: none;
-    }
-
-    input:focus { border-color: #111827; }
-
-    .botones {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 20px;
-    }
-
-    button {
-      border: none;
-      border-radius: 10px;
-      padding: 14px 20px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    #calcular {
-      background: #111827;
-      color: white;
-      flex: 1;
-    }
-
-    #limpiar {
-      background: #e5e7eb;
-      color: #111827;
-    }
-
-    #whatsapp {
-      display: none;
-      width: 100%;
-      background: #25D366;
-      color: white;
-      margin-top: 10px;
-    }
-
-    #map {
-      width: 100%;
-      height: 450px;
-      border-radius: 14px;
-      overflow: hidden;
-      background: #e5e7eb;
-    }
-
-    .resultado {
-      display: none;
-      margin-top: 20px;
-      padding: 18px;
-      background: #f9fafb;
-      border-radius: 12px;
-      border: 1px solid #e5e7eb;
-    }
-
-    .dato { margin: 8px 0; }
-    .dato strong { color: #111827; }
-
-    .precio {
-      font-size: 25px;
-      font-weight: bold;
-      margin-top: 15px;
-    }
-
-    .cargando {
-      display: none;
-      margin-top: 15px;
-      padding: 15px;
-      background: #eff6ff;
-      border-radius: 10px;
-      color: #1e40af;
-      font-weight: bold;
-    }
-
-    .error {
-      display: none;
-      margin-top: 15px;
-      padding: 15px;
-      background: #fee2e2;
-      border-radius: 10px;
-      color: #991b1b;
-      font-weight: bold;
-    }
-
-    .direccion-encontrada {
-      font-size: 13px;
-      color: #6b7280;
-      margin-top: 5px;
-    }
-
-    footer {
-      text-align: center;
-      padding: 25px;
-      color: #6b7280;
-      font-size: 14px;
-    }
-
-    @media (max-width: 600px) {
-      header h1 { font-size: 25px; }
-      .contenedor { width: 94%; }
-      #map { height: 380px; }
-      button { width: 100%; }
-      #calcular { flex: none; }
-    }
+    /* Modal emergente para confirmación y direcciones exactas */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
+    .modal { background: #1e1e1e; padding: 20px; border-radius: 12px; width: 100%; max-width: 450px; border: 1px solid #00ff88; max-height: 90vh; overflow-y: auto; }
+    .modal h2 { color: #00ff88; margin-bottom: 15px; font-size: 1.2rem; border-bottom: 1px solid #333; padding-bottom: 8px; }
   </style>
 </head>
-
 <body>
+
   <header>
-    <h1>🛵 RápidoYa</h1>
-    <p>Domicilios rápidos en Tuluá, Valle del Cauca</p>
+    <h1>⚡ Tuluá Express</h1>
+    <p>Cotiza y solicita tus domicilios al instante</p>
   </header>
 
-  <div class="contenedor">
-    <div class="card">
-      <h2>📍 Cotiza tu domicilio</h2>
-
-      <label for="origen">Dirección de recogida</label>
-      <input id="origen" type="text" placeholder="Ej: Calle 32a #18-26" autocomplete="off">
-      <div id="origenEncontrado" class="direccion-encontrada"></div>
-
-      <label for="destino">Dirección de entrega</label>
-      <input id="destino" type="text" placeholder="Ej: Calle 7 #19-03" autocomplete="off">
-      <div id="destinoEncontrado" class="direccion-encontrada"></div>
-
-      <div class="botones">
-        <button id="calcular" onclick="calcularDomicilio()">📍 Calcular domicilio</button>
-        <button id="limpiar" onclick="limpiarTodo()">🗑️ Limpiar</button>
-      </div>
-
-      <div id="cargando" class="cargando">⏳ Buscando las direcciones y calculando la ruta...</div>
-      <div id="error" class="error"></div>
+  <div class="container">
+    <!-- Paso 1: Cotización básica por sector/barrio -->
+    <div class="input-group">
+      <label>📍 Barrio u Origen de recogida:</label>
+      <input type="text" id="origenInput" placeholder="Ej: Centro, Tuluá" value="Centro, Tuluá">
     </div>
 
-    <div class="card">
-      <h2>🗺️ Ruta</h2>
-      <div id="map"></div>
+    <div class="input-group">
+      <label>🏁 Barrio u Destino de entrega:</label>
+      <input type="text" id="destinoInput" placeholder="Ej: San Luis, Tuluá" value="San Luis, Tuluá">
     </div>
 
-    <div id="resultado" class="card resultado">
-      <h2>📦 Información del domicilio</h2>
+    <button class="btn btn-primary" onclick="calcularCotizacion()">🔍 Calcular Tarifa</button>
 
-      <div class="dato">🏘️ <strong>Barrio de recogida:</strong> <span id="barrioOrigen"></span></div>
-      <div class="dato">🏘️ <strong>Barrio de entrega:</strong> <span id="barrioDestino"></span></div>
-      <div class="dato">📏 <strong>Distancia:</strong> <span id="distancia"></span></div>
-      <div class="dato">⏱️ <strong>Tiempo estimado:</strong> <span id="tiempo"></span></div>
-      <div class="precio">💰 Precio: <span id="precio"></span></div>
+    <div id="map"></div>
 
-      <button id="whatsapp" onclick="enviarWhatsApp()">📲 Pedir domicilio por WhatsApp</button>
+    <div class="result-box" id="resultBox">
+      <p>Distancia estimada: <span id="distanciaTxt">0</span> km</p>
+      <h3>Tarifa: $<span id="precioTxt">0</span> COP</h3>
+      <button class="btn btn-primary" style="margin-top: 5px;" onclick="abrirModalPedido()">📦 Hacer Pedido</button>
     </div>
   </div>
 
-  <footer>© 2026 RápidoYa · Tuluá, Valle del Cauca</footer>
+  <!-- Modal para ingresar direcciones exactas y observaciones -->
+  <div class="modal-overlay" id="modalPedido">
+    <div class="modal">
+      <h2>Confirmar Domicilio</h2>
+      
+      <div class="input-group">
+        <label>👤 Tu Nombre:</label>
+        <input type="text" id="clienteNombre" placeholder="Tu nombre completo">
+      </div>
 
+      <div class="input-group">
+        <label>📞 Tu Teléfono / WhatsApp:</label>
+        <input type="tel" id="clienteTelefono" placeholder="Ej: 3180505095">
+      </div>
+
+      <hr style="border: 0.5px solid #333; margin: 15px 0;">
+
+      <div class="input-group">
+        <label>📍 Barrio Origen (Cargado):</label>
+        <input type="text" id="barrioOrigenModal" readonly style="color: #888; background: #222;">
+      </div>
+
+      <div class="input-group">
+        <label>🏠 Dirección Exacta de Recogida:</label>
+        <input type="text" id="dirExactaOrigen" placeholder="Ej: Calle 26 # 11 - 05 local 2">
+      </div>
+
+      <div class="input-group">
+        <label>🏁 Barrio Destino (Cargado):</label>
+        <input type="text" id="barrioDestinoModal" readonly style="color: #888; background: #222;">
+      </div>
+
+      <div class="input-group">
+        <label>🏠 Dirección Exacta de Entrega:</label>
+        <input type="text" id="dirExactaDestino" placeholder="Ej: Transversal 12 # 20 - 15 Casa blanca">
+      </div>
+
+      <div class="input-group">
+        <label>📝 Observaciones / Instrucciones:</label>
+        <textarea id="observacionesInput" rows="2" placeholder="Ej: Recoger paquete y llevar cambio de $20.000"></textarea>
+      </div>
+
+      <button class="btn btn-whatsapp" onclick="enviarAWhatsApp()">📲 Enviar Pedido por WhatsApp</button>
+      <button class="btn btn-secondary" onclick="cerrarModalPedido()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Scripts Libres y Conectores -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    const TULUA_CENTER = [4.0847, -76.1954];
-    const TULUA_VIEWBOX = "-76.27,4.14,-76.13,4.02";
-    const WHATSAPP = "573180505095";
+    // 1. Conexión a tu proyecto de Supabase
+    const SUPABASE_URL = 'https://mzzhpqnaarmnzowijoun.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_0jik7yabOFeMos2rv2MAVQ_TdfJPtVz';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let map = null;
-    let marcadorOrigen = null;
-    let marcadorDestino = null;
-    let rutaMapa = null;
-    let datosActuales = null;
+    // 2. Tu número real configurado con prefijo internacional de Colombia (57)
+    const NUMERO_WHATSAPP = "573180505095";
 
-    function iniciarMapa() {
-      try {
-        map = L.map("map", {
-          center: TULUA_CENTER,
-          zoom: 14,
-          zoomControl: true
-        });
+    // 3. Inicializar el mapa centrado en Tuluá, Valle del Cauca
+    let map = L.map('map').setView([4.084, -76.198], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
 
-        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          maxZoom: 19,
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        }).addTo(map);
+    let routeLayer = null;
+    let datosCotizacion = {};
 
-        setTimeout(() => {
-          if (map) map.invalidateSize();
-        }, 500);
-      } catch (error) {
-        console.error("Error iniciando mapa:", error);
-        mostrarError("No se pudo cargar el mapa. Revisa tu conexión a Internet.");
-      }
-    }
+    // 4. Función para calcular distancia y tarifa con OpenStreetMap y OSRM
+    async function calcularCotizacion() {
+      const origen = document.getElementById('origenInput').value;
+      const destino = document.getElementById('destinoInput').value;
 
-    function mostrarError(mensaje) {
-      const el = document.getElementById("error");
-      if (el) {
-        el.textContent = mensaje;
-        el.style.display = "block";
-      }
-    }
-
-    function ocultarError() {
-      const el = document.getElementById("error");
-      if (el) {
-        el.style.display = "none";
-        el.textContent = "";
-      }
-    }
-
-    function mostrarCargando(mostrar) {
-      const el = document.getElementById("cargando");
-      if (el) {
-        el.style.display = mostrar ? "block" : "none";
-      }
-    }
-
-    function obtenerBarrio(address) {
-      if (!address) return "No disponible";
-      return (
-        address.neighbourhood ||
-        address.suburb ||
-        address.quarter ||
-        address.residential ||
-        address.city_district ||
-        address.village ||
-        "No disponible"
-      );
-    }
-
-    async function buscarDireccion(direccion) {
-      const consulta = `${direccion.trim()}, Tuluá, Valle del Cauca, Colombia`;
-      const url =
-        "https://nominatim.openstreetmap.org/search" +
-        "?format=jsonv2" +
-        "&addressdetails=1" +
-        "&limit=1" +
-        "&countrycodes=co" +
-        "&viewbox=" + encodeURIComponent(TULUA_VIEWBOX) +
-        "&bounded=1" +
-        "&q=" + encodeURIComponent(consulta);
-
-      try {
-        const respuesta = await fetch(url, {
-          method: "GET",
-          headers: { Accept: "application/json" }
-        });
-
-        if (!respuesta.ok) {
-          throw new Error("Error HTTP " + respuesta.status);
-        }
-
-        const resultados = await respuesta.json();
-        if (!resultados || resultados.length === 0) {
-          throw new Error("No encontramos esa dirección dentro de Tuluá.");
-        }
-
-        const resultado = resultados[0];
-        const textoCompleto = (resultado.display_name || "").toLowerCase();
-
-        if (!textoCompleto.includes("tulua") && !textoCompleto.includes("tuluá")) {
-          throw new Error("La dirección encontrada no pertenece a Tuluá.");
-        }
-
-        return resultado;
-      } catch (error) {
-        console.error("Error buscando dirección:", error);
-        throw error;
-      }
-    }
-
-    function esperar(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    async function calcularRuta(origen, destino) {
-      const url =
-        "https://router.project-osrm.org/route/v1/driving/" +
-        origen.lon + "," + origen.lat + ";" +
-        destino.lon + "," + destino.lat +
-        "?overview=full&geometries=geojson";
-
-      try {
-        const respuesta = await fetch(url);
-        if (!respuesta.ok) {
-          throw new Error("No se pudo conectar con el sistema de rutas.");
-        }
-
-        const datos = await respuesta.json();
-        if (datos.code !== "Ok" || !datos.routes || datos.routes.length === 0) {
-          throw new Error("No fue posible encontrar una ruta entre las dos direcciones.");
-        }
-
-        const ruta = datos.routes[0];
-        if (!ruta.geometry || !ruta.geometry.coordinates || ruta.geometry.coordinates.length < 2) {
-          throw new Error("La ruta no contiene suficientes puntos para mostrarla.");
-        }
-
-        return ruta;
-      } catch (error) {
-        console.error("Error calculando ruta:", error);
-        throw error;
-      }
-    }
-
-    function calcularPrecio(km) {
-      if (km <= 2) return "$5.000 COP";
-      if (km <= 4) return "$7.000 COP";
-      if (km <= 6) return "$9.000 COP";
-      if (km <= 8) return "$11.000 COP";
-      return "Consultar";
-    }
-
-    function obtenerTextoDireccion(resultado) {
-      return resultado && resultado.display_name ? resultado.display_name : "Dirección encontrada";
-    }
-
-    function mostrarRuta(origen, destino, ruta) {
-      try {
-        if (marcadorOrigen) map.removeLayer(marcadorOrigen);
-        if (marcadorDestino) map.removeLayer(marcadorDestino);
-        if (rutaMapa) map.removeLayer(rutaMapa);
-
-        const coordenadasOrigen = [parseFloat(origen.lat), parseFloat(origen.lon)];
-        const coordenadasDestino = [parseFloat(destino.lat), parseFloat(destino.lon)];
-
-        marcadorOrigen = L.marker(coordenadasOrigen).addTo(map).bindPopup("<b>📍 Recogida</b><br>" + obtenerTextoDireccion(origen));
-        marcadorDestino = L.marker(coordenadasDestino).addTo(map).bindPopup("<b>🏁 Entrega</b><br>" + obtenerTextoDireccion(destino));
-
-        rutaMapa = L.geoJSON(ruta.geometry, {
-          style: {
-            color: "#111827",
-            weight: 6,
-            opacity: 0.9
-          }
-        }).addTo(map);
-
-        const limites = rutaMapa.getBounds();
-        if (limites && limites.isValid()) {
-          map.fitBounds(limites, { padding: [40, 40] });
-        }
-
-        setTimeout(() => map.invalidateSize(), 300);
-        marcadorOrigen.openPopup();
-      } catch (error) {
-        console.error("Error dibujando ruta:", error);
-        throw new Error("La ruta fue encontrada, pero no pudo mostrarse correctamente en el mapa.");
-      }
-    }
-
-    function limpiarTodo() {
-      document.getElementById("origen").value = "";
-      document.getElementById("destino").value = "";
-      document.getElementById("origenEncontrado").textContent = "";
-      document.getElementById("destinoEncontrado").textContent = "";
-      document.getElementById("resultado").style.display = "none";
-      document.getElementById("whatsapp").style.display = "none";
-      ocultarError();
-      mostrarCargando(false);
-
-      if (marcadorOrigen) {
-        map.removeLayer(marcadorOrigen);
-        marcadorOrigen = null;
-      }
-      if (marcadorDestino) {
-        map.removeLayer(marcadorDestino);
-        marcadorDestino = null;
-      }
-      if (rutaMapa) {
-        map.removeLayer(rutaMapa);
-        rutaMapa = null;
-      }
-
-      if (map) {
-        map.setView(TULUA_CENTER, 14);
-      }
-    }
-
-    function enviarWhatsApp() {
-      if (!datosActuales) return;
-
-      const texto =
-        "Hola RápidoYa, quiero pedir un domicilio.\n\n" +
-        "Barrio de recogida: " + datosActuales.barrioOrigen + "\n" +
-        "Barrio de entrega: " + datosActuales.barrioDestino + "\n" +
-        "Distancia: " + datosActuales.distancia + "\n" +
-        "Tiempo estimado: " + datosActuales.tiempo + "\n" +
-        "Precio: " + datosActuales.precio;
-
-      const url = "https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(texto);
-      window.open(url, "_blank");
-    }
-
-    async function calcularDomicilio() {
-      const origenTexto = document.getElementById("origen").value.trim();
-      const destinoTexto = document.getElementById("destino").value.trim();
-
-      if (!origenTexto) {
-        mostrarError("Escribe la dirección de recogida.");
+      if (!origen || !destino) {
+        alert("Por favor ingresa tanto el barrio de origen como el de destino.");
         return;
       }
 
-      if (!destinoTexto) {
-        mostrarError("Escribe la dirección de entrega.");
-        return;
-      }
-
-      ocultarError();
-      mostrarCargando(true);
-      document.getElementById("resultado").style.display = "none";
-      document.getElementById("whatsapp").style.display = "none";
-
       try {
-        const origen = await buscarDireccion(origenTexto);
-        const destino = await buscarDireccion(destinoTexto);
+        // Geocodificar Origen
+        const resOrigen = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(origen)}`);
+        const dataOrigen = await resOrigen.json();
 
-        document.getElementById("origenEncontrado").textContent = obtenerTextoDireccion(origen);
-        document.getElementById("destinoEncontrado").textContent = obtenerTextoDireccion(destino);
+        // Geocodificar Destino
+        const resDestino = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destino)}`);
+        const dataDestino = await resDestino.json();
 
-        const ruta = await calcularRuta(origen, destino);
-        const distanciaKm = (ruta.distance || 0) / 1000;
-        const tiempoMin = Math.max(1, Math.round((ruta.duration || 0) / 60));
-        const precio = calcularPrecio(distanciaKm);
+        if (dataOrigen.length === 0 || dataDestino.length === 0) {
+          alert("No se pudo ubicar una de las direcciones. Intenta ser más específico (Ej: Centro, Tuluá).");
+          return;
+        }
 
-        const barrioOrigen = obtenerBarrio(origen.address);
-        const barrioDestino = obtenerBarrio(destino.address);
+        const coordA = [dataOrigen[0].lon, dataOrigen[0].lat];
+        const coordB = [dataDestino[0].lon, dataDestino[0].lat];
 
-        mostrarRuta(origen, destino, ruta);
+        // Trazar ruta mediante OSRM (Gratis)
+        const routeRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordA[0]},${coordA[1]};${coordB[0]},${coordB[1]}?overview=full&geometries=geojson`);
+        const routeData = await routeRes.json();
 
-        document.getElementById("barrioOrigen").textContent = barrioOrigen;
-        document.getElementById("barrioDestino").textContent = barrioDestino;
-        document.getElementById("distancia").textContent = distanciaKm.toFixed(1) + " km";
-        document.getElementById("tiempo").textContent = tiempoMin + " min";
-        document.getElementById("precio").textContent = precio;
+        if (!routeData.routes || routeData.routes.length === 0) {
+          alert("No se pudo calcular la ruta entre ambos puntos.");
+          return;
+        }
 
-        datosActuales = {
-          barrioOrigen: barrioOrigen,
-          barrioDestino: barrioDestino,
-          distancia: distanciaKm.toFixed(1) + " km",
-          tiempo: tiempoMin + " min",
-          precio: precio
-        };
+        const distanciaKm = (routeData.routes[0].distance / 1000).toFixed(1);
+        
+        // --- Algoritmo de Tarifas ---
+        let precio = 4000; // Tarifa mínima inicial
+        if (distanciaKm > 2 && distanciaKm <= 6) {
+          precio = 4000 + Math.ceil(distanciaKm - 2) * 1000; // $1.000 COP extra por Km adicional urbano
+        } else if (distanciaKm > 6) {
+          precio = 8000 + Math.ceil(distanciaKm - 6) * 1800; // Intermunicipal / Larga distancia
+        }
 
-        document.getElementById("resultado").style.display = "block";
-        document.getElementById("whatsapp").style.display = "block";
-        mostrarCargando(false);
-      } catch (error) {
-        console.error("Error general:", error);
-        mostrarError(error.message || "No se pudo calcular el domicilio.");
-        mostrarCargando(false);
+        // Renderizar línea verde de ruta en el mapa
+        if (routeLayer) map.removeLayer(routeLayer);
+        routeLayer = L.geoJSON(routeData.routes[0].geometry, { style: { color: '#00ff88', weight: 5 } }).addTo(map);
+        map.fitBounds(routeLayer.getBounds());
+
+        // Guardar cotización en variable global
+        datosCotizacion = { origen, destino, distanciaKm, precio };
+
+        // Desplegar resultado
+        document.getElementById('distanciaTxt').innerText = distanciaKm;
+        document.getElementById('precioTxt').innerText = precio.toLocaleString('es-CO');
+        document.getElementById('resultBox').style.display = 'block';
+
+      } catch (err) {
+        console.error(err);
+        alert("Ocurrió un error al calcular la cotización.");
       }
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      iniciarMapa();
-    });
+    // 5. Control del Modal de Pedido
+    function abrirModalPedido() {
+      document.getElementById('barrioOrigenModal').value = datosCotizacion.origen;
+      document.getElementById('barrioDestinoModal').value = datosCotizacion.destino;
+      document.getElementById('modalPedido').style.display = 'flex';
+    }
+
+    function cerrarModalPedido() {
+      document.getElementById('modalPedido').style.display = 'none';
+    }
+
+    // 6. Armar mensaje estructurado y enviar directo a tu WhatsApp
+    function enviarAWhatsApp() {
+      const nombre = document.getElementById('clienteNombre').value;
+      const telefono = document.getElementById('clienteTelefono').value;
+      const dirOrigen = document.getElementById('dirExactaOrigen').value;
+      const dirDestino = document.getElementById('dirExactaDestino').value;
+      const obs = document.getElementById('observacionesInput').value || "Sin observaciones";
+
+      if (!nombre || !telefono || !dirOrigen || !dirDestino) {
+        alert("Por favor completa tu nombre, teléfono y las direcciones exactas.");
+        return;
+      }
+
+      const mensaje = `🚴‍♂️ *¡NUEVO DOMICILIO - TULUÁ EXPRESS!* %0A%0A` +
+        `👤 *Cliente:* ${nombre}%0A` +
+        `📞 *Teléfono:* ${telefono}%0A%0A` +
+        `📍 *RECOGER EN:* %0A` +
+        `• Barrio: ${datosCotizacion.origen}%0A` +
+        `• Dirección Exacta: ${dirOrigen}%0A%0A` +
+        `🏁 *ENTREGAR EN:* %0A` +
+        `• Barrio: ${datosCotizacion.destino}%0A` +
+        `• Dirección Exacta: ${dirDestino}%0A%0A` +
+        `📏 *Distancia:* ${datosCotizacion.distanciaKm} km%0A` +
+        `💰 *VALOR A COBRAR:* $${datosCotizacion.precio.toLocaleString('es-CO')} COP%0A%0A` +
+        `📝 *Observaciones:* ${obs}`;
+
+      const urlWhatsApp = `https://wa.me/${NUMERO_WHATSAPP}?text=${mensaje}`;
+      
+      window.open(urlWhatsApp, '_blank');
+      cerrarModalPedido();
+    }
   </script>
 </body>
 </html>

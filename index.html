@@ -5,47 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tuluá Express - Domicilios</title>
   
-  <!-- Leaflet CSS (Mapa interactivo) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: #121212; color: #ffffff; padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-    
-    header { width: 100%; max-width: 500px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #222; }
-    .brand h1 { color: #00ff88; font-size: 1.4rem; }
-    .brand p { color: #888; font-size: 0.75rem; }
-    
-    .auth-buttons button { background: transparent; border: 1px solid #00ff88; color: #00ff88; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; cursor: pointer; }
-    .auth-buttons button:hover { background: #00ff88; color: #000; }
-    #userBadge { font-size: 0.85rem; color: #00ff88; display: none; }
-
-    .container { width: 100%; max-width: 500px; background: #1e1e1e; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-    
-    .input-group { margin-bottom: 12px; }
-    .input-group label { display: block; font-size: 0.85rem; color: #00ff88; margin-bottom: 5px; font-weight: 600; }
-    .input-group input, .input-group textarea { width: 100%; padding: 11px; border-radius: 6px; border: 1px solid #333; background: #2a2a2a; color: #fff; font-size: 0.95rem; outline: none; }
-    .input-group input:focus, .input-group textarea:focus { border-color: #00ff88; }
-    
-    #map { height: 220px; width: 100%; border-radius: 8px; margin: 15px 0; border: 1px solid #333; }
-    
-    .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
-    .btn-primary { background: #00ff88; color: #000; }
-    .btn-primary:hover { background: #00cc6a; }
-    .btn-whatsapp { background: #25D366; color: #fff; margin-top: 10px; }
-    .btn-whatsapp:hover { background: #1ebc57; }
-    .btn-secondary { background: #444; color: #fff; margin-top: 8px; }
-    .btn-secondary:hover { background: #555; }
-
-    .result-box { background: #2a2a2a; padding: 15px; border-radius: 8px; text-align: center; margin-top: 15px; display: none; border: 1px solid #333; }
-    .result-box p { color: #ccc; font-size: 0.9rem; margin-bottom: 5px; }
-    .result-box h3 { color: #00ff88; font-size: 1.5rem; margin-bottom: 10px; }
-
-    /* Modales emergentes */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
-    .modal { background: #1e1e1e; padding: 20px; border-radius: 12px; width: 100%; max-width: 450px; border: 1px solid #00ff88; max-height: 90vh; overflow-y: auto; }
-    .modal h2 { color: #00ff88; margin-bottom: 15px; font-size: 1.2rem; border-bottom: 1px solid #333; padding-bottom: 8px; }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
@@ -61,13 +22,12 @@
       </div>
       <div id="userBadge">
         <span id="userNameTxt">👋 Hola</span> | 
-        <a href="#" onclick="cerrarSesion()" style="color:#ff5555; text-decoration:none; font-size:0.8rem;">Salir</a>
+        <a href="#" id="btnCerrarSesion" style="color:#ff5555; text-decoration:none; font-size:0.8rem;">Salir</a>
       </div>
     </div>
   </header>
 
   <div class="container">
-    <!-- Paso 1: Cotización básica solo escribiendo el barrio -->
     <div class="input-group">
       <label>📍 Barrio u Origen (Recogida en Tuluá):</label>
       <input type="text" id="origenInput" placeholder="Ej: Centro, San Luis, Salesiano">
@@ -78,18 +38,18 @@
       <input type="text" id="destinoInput" placeholder="Ej: Progresar, Victoria, El Príncipe">
     </div>
 
-    <button class="btn btn-primary" onclick="calcularCotizacion()">🔍 Calcular Tarifa</button>
+    <button class="btn btn-primary" id="btnCalcular">🔍 Calcular Tarifa</button>
 
     <div id="map"></div>
 
     <div class="result-box" id="resultBox">
       <p>Distancia estimada: <span id="distanciaTxt">0</span> km</p>
       <h3>Tarifa: $<span id="precioTxt">0</span> COP</h3>
-      <button class="btn btn-primary" style="margin-top: 5px;" onclick="verificarInicieSesionOIniciePedido()">📦 Hacer Pedido</button>
+      <button class="btn btn-primary" id="btnHacerPedido">📦 Hacer Pedido</button>
     </div>
   </div>
 
-  <!-- Modal de Autenticación (Login / Registro) -->
+  <!-- Modal Autenticación -->
   <div class="modal-overlay" id="modalAuth">
     <div class="modal">
       <h2 id="authModalTitle">Iniciar Sesión</h2>
@@ -124,22 +84,22 @@
         <input type="text" id="authDireccion" placeholder="Ej: Calle 32A # 12-04">
       </div>
 
-      <button class="btn btn-primary" id="btnAuthSubmit" onclick="procesarAuth()">Ingresar</button>
-      <button class="btn btn-secondary" onclick="cerrarAuthModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btnAuthSubmit">Ingresar</button>
+      <button class="btn btn-secondary" onclick="cerrarModal('modalAuth')">Cancelar</button>
     </div>
   </div>
 
-  <!-- Modal Pregunta Invitado / Registro -->
+  <!-- Modal Invitado -->
   <div class="modal-overlay" id="modalPreguntaInvitado">
     <div class="modal" style="text-align: center;">
       <h2>¿Cómo quieres continuar?</h2>
       <p style="color: #ccc; font-size: 0.9rem; margin-bottom: 15px;">Registrarte te permite pedir más rápido sin tener que escribir tu dirección cada vez.</p>
-      <button class="btn btn-primary" onclick="cerrarPreguntaModal(); abrirAuthModal('register')">📝 Registrarme en 30 Segundos</button>
-      <button class="btn btn-secondary" onclick="cerrarPreguntaModal(); abrirModalPedido()">👤 Continuar como Invitado</button>
+      <button class="btn btn-primary" onclick="cerrarModal('modalPreguntaInvitado'); abrirAuthModal('register')">📝 Registrarme en 30 Segundos</button>
+      <button class="btn btn-secondary" onclick="cerrarModal('modalPreguntaInvitado'); abrirModalPedido()">👤 Continuar como Invitado</button>
     </div>
   </div>
 
-  <!-- Modal de Pedido (Direcciones Exactas) -->
+  <!-- Modal Pedido -->
   <div class="modal-overlay" id="modalPedido">
     <div class="modal">
       <h2>Confirmar Domicilio</h2>
@@ -181,262 +141,16 @@
         <textarea id="observacionesInput" rows="2" placeholder="Ej: Recoger paquete y llevar cambio de $20.000"></textarea>
       </div>
 
-      <button class="btn btn-whatsapp" onclick="enviarAWhatsApp()">📲 Enviar Pedido por WhatsApp</button>
-      <button class="btn btn-secondary" onclick="cerrarModalPedido()">Cancelar</button>
+      <button class="btn btn-whatsapp" id="btnEnviarWhatsApp">📲 Enviar Pedido por WhatsApp</button>
+      <button class="btn btn-secondary" onclick="cerrarModal('modalPedido')">Cancelar</button>
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Carga de librerías externas -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <script>
-    const SUPABASE_URL = 'https://mzzhpqnaarmnzowijoun.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_0jik7yabOFeMos2rv2MAVQ_TdfJPtVz';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    const NUMERO_WHATSAPP = "573180505095";
-
-    let map = L.map('map').setView([4.084, -76.198], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-
-    let routeLayer = null;
-    let datosCotizacion = {};
-    let usuarioActual = null;
-    let authMode = 'login';
-
-    // Verificar sesión iniciada al cargar
-    window.onload = async () => {
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (user) {
-        usuarioActual = user;
-        cargarPerfilUsuario(user.id);
-      }
-    };
-
-    async function cargarPerfilUsuario(userId) {
-      const { data, error } = await supabaseClient.from('usuarios').select('*').eq('id', userId).single();
-      if (data) {
-        usuarioActual.profile = data;
-        document.getElementById('guestButtons').style.display = 'none';
-        document.getElementById('userBadge').style.display = 'block';
-        const displayUser = data.username ? `@${data.username}` : data.nombre;
-        document.getElementById('userNameTxt').innerText = `👋 ${displayUser}`;
-      }
-    }
-
-    // Modal Auth
-    function abrirAuthModal(modo) {
-      authMode = modo;
-      document.getElementById('modalAuth').style.display = 'flex';
-      if (modo === 'register') {
-        document.getElementById('authModalTitle').innerText = 'Crear Cuenta';
-        document.getElementById('groupUsername').style.display = 'block';
-        document.getElementById('groupNombre').style.display = 'block';
-        document.getElementById('groupTelefono').style.display = 'block';
-        document.getElementById('groupDireccion').style.display = 'block';
-        document.getElementById('btnAuthSubmit').innerText = 'Registrarse';
-      } else {
-        document.getElementById('authModalTitle').innerText = 'Iniciar Sesión';
-        document.getElementById('groupUsername').style.display = 'none';
-        document.getElementById('groupNombre').style.display = 'none';
-        document.getElementById('groupTelefono').style.display = 'none';
-        document.getElementById('groupDireccion').style.display = 'none';
-        document.getElementById('btnAuthSubmit').innerText = 'Ingresar';
-      }
-    }
-
-    function cerrarAuthModal() { document.getElementById('modalAuth').style.display = 'none'; }
-
-    async function procesarAuth() {
-      const email = document.getElementById('authEmail').value;
-      const password = document.getElementById('authPassword').value;
-
-      if (authMode === 'register') {
-        const username = document.getElementById('authUsername').value.trim().toLowerCase();
-        const nombre = document.getElementById('authNombre').value;
-        const telefono = document.getElementById('authTelefono').value;
-        const direccion = document.getElementById('authDireccion').value;
-
-        if (!email || !password || !nombre || !telefono || !username) {
-          alert('Por favor completa todos los campos requeridos.');
-          return;
-        }
-
-        // Verificar si el username ya existe
-        const { data: existingUser } = await supabaseClient.from('usuarios').select('username').eq('username', username).single();
-        if (existingUser) {
-          alert('El nombre de usuario ya está ocupado. Elige otro.');
-          return;
-        }
-
-        const { data, error } = await supabaseClient.auth.signUp({ email, password });
-        if (error) { alert('Error: ' + error.message); return; }
-
-        if (data.user) {
-          await supabaseClient.from('usuarios').insert([{
-            id: data.user.id,
-            username: username,
-            nombre: nombre,
-            telefono: telefono,
-            direccion: direccion || ''
-          }]);
-          alert('¡Registro exitoso!');
-          location.reload();
-        }
-      } else {
-        const { data, error } = await supabaseClient.signInWithPassword({ email, password });
-        if (error) { alert('Error: ' + error.message); return; }
-        location.reload();
-      }
-    }
-
-    async function cerrarSesion() {
-      await supabaseClient.auth.signOut();
-      location.reload();
-    }
-
-    // Cotizador adaptado solo para Tuluá
-    async function calcularCotizacion() {
-      let origenRaw = document.getElementById('origenInput').value;
-      let destinoRaw = document.getElementById('destinoInput').value;
-
-      if (!origenRaw || !destinoRaw) {
-        alert("Por favor ingresa los barrios de origen y destino.");
-        return;
-      }
-
-      const origen = `${origenRaw}, Tulua, Valle del Cauca, Colombia`;
-      const destino = `${destinoRaw}, Tulua, Valle del Cauca, Colombia`;
-
-      try {
-        const resOrigen = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(origen)}`);
-        const dataOrigen = await resOrigen.json();
-
-        const resDestino = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destino)}`);
-        const dataDestino = await resDestino.json();
-
-        if (dataOrigen.length === 0 || dataDestino.length === 0) {
-          alert("No se ubicó alguno de los barrios dentro de Tuluá. Intenta verificar la ortografía.");
-          return;
-        }
-
-        const coordA = [dataOrigen[0].lon, dataOrigen[0].lat];
-        const coordB = [dataDestino[0].lon, dataDestino[0].lat];
-
-        const routeRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordA[0]},${coordA[1]};${coordB[0]},${coordB[1]}?overview=full&geometries=geojson`);
-        const routeData = await routeRes.json();
-
-        if (!routeData.routes || routeData.routes.length === 0) {
-          alert("No se pudo trazar la ruta en Tuluá.");
-          return;
-        }
-
-        const distanciaKm = (routeData.routes[0].distance / 1000).toFixed(1);
-        
-        let precio = 4000;
-        if (distanciaKm > 2 && distanciaKm <= 6) {
-          precio = 4000 + Math.ceil(distanciaKm - 2) * 1000;
-        } else if (distanciaKm > 6) {
-          precio = 8000 + Math.ceil(distanciaKm - 6) * 1800;
-        }
-
-        if (routeLayer) map.removeLayer(routeLayer);
-        routeLayer = L.geoJSON(routeData.routes[0].geometry, { style: { color: '#00ff88', weight: 5 } }).addTo(map);
-        map.fitBounds(routeLayer.getBounds());
-
-        datosCotizacion = { origen: origenRaw, destino: destinoRaw, distanciaKm, precio };
-
-        document.getElementById('distanciaTxt').innerText = distanciaKm;
-        document.getElementById('precioTxt').innerText = precio.toLocaleString('es-CO');
-        document.getElementById('resultBox').style.display = 'block';
-
-      } catch (err) {
-        console.error(err);
-        alert("Ocurrió un error al calcular el recorrido.");
-      }
-    }
-
-    function verificarInicieSesionOIniciePedido() {
-      if (!usuarioActual) {
-        document.getElementById('modalPreguntaInvitado').style.display = 'flex';
-      } else {
-        abrirModalPedido();
-      }
-    }
-
-    function cerrarPreguntaModal() {
-      document.getElementById('modalPreguntaInvitado').style.display = 'none';
-    }
-
-    function abrirModalPedido() {
-      document.getElementById('barrioOrigenModal').value = datosCotizacion.origen;
-      document.getElementById('barrioDestinoModal').value = datosCotizacion.destino;
-
-      if (usuarioActual && usuarioActual.profile) {
-        document.getElementById('clienteNombre').value = usuarioActual.profile.nombre || '';
-        document.getElementById('clienteTelefono').value = usuarioActual.profile.telefono || '';
-        document.getElementById('dirExactaOrigen').value = usuarioActual.profile.direccion || '';
-      }
-
-      document.getElementById('modalPedido').style.display = 'flex';
-    }
-
-    function cerrarModalPedido() { document.getElementById('modalPedido').style.display = 'none'; }
-
-    // Función de reinicio completo del formulario
-    function reiniciarCotizador() {
-      document.getElementById('origenInput').value = '';
-      document.getElementById('destinoInput').value = '';
-      document.getElementById('dirExactaOrigen').value = '';
-      document.getElementById('dirExactaDestino').value = '';
-      document.getElementById('observacionesInput').value = '';
-      
-      document.getElementById('resultBox').style.display = 'none';
-      if (routeLayer) {
-        map.removeLayer(routeLayer);
-        routeLayer = null;
-      }
-      map.setView([4.084, -76.198], 13);
-      datosCotizacion = {};
-    }
-
-    // Enviar a WhatsApp y reiniciar app
-    function enviarAWhatsApp() {
-      const nombre = document.getElementById('clienteNombre').value;
-      const telefono = document.getElementById('clienteTelefono').value;
-      const dirOrigen = document.getElementById('dirExactaOrigen').value;
-      const dirDestino = document.getElementById('dirExactaDestino').value;
-      const obs = document.getElementById('observacionesInput').value || "Sin observaciones";
-
-      if (!nombre || !telefono || !dirOrigen || !dirDestino) {
-        alert("Por favor completa tu nombre, teléfono y las direcciones exactas.");
-        return;
-      }
-
-      const userTag = (usuarioActual && usuarioActual.profile && usuarioActual.profile.username) 
-        ? ` (@${usuarioActual.profile.username})` 
-        : '';
-
-      const mensajeTexto = `🚴‍♂ *¡NUEVO DOMICILIO - TULUÁ EXPRESS!*\n\n` +
-        `👤 *Cliente:* ${nombre}${userTag}\n` +
-        `📞 *Teléfono:* ${telefono}\n\n` +
-        `📍 *RECOGER EN:*\n` +
-        `• Barrio: ${datosCotizacion.origen}\n` +
-        `• Dirección Exacta: ${dirOrigen}\n\n` +
-        `🏁 *ENTREGAR EN:*\n` +
-        `• Barrio: ${datosCotizacion.destino}\n` +
-        `• Dirección Exacta: ${dirDestino}\n\n` +
-        `📏 *Distancia:* ${datosCotizacion.distanciaKm} km\n` +
-        `💰 *VALOR A COBRAR:* $${datosCotizacion.precio.toLocaleString('es-CO')} COP\n\n` +
-        `📝 *Observaciones:* ${obs}`;
-
-      const urlWhatsApp = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensajeTexto)}`;
-      
-      window.open(urlWhatsApp, '_blank');
-      cerrarModalPedido();
-      reiniciarCotizador();
-    }
-  </script>
+  <!-- Script Controlador Principal Modular -->
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>

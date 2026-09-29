@@ -1,144 +1,244 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>RápidoYa | Domicilios</title>
 
+
     <style>
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
 
+
         body {
-            font-family: Arial, Helvetica, sans-serif;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
             background: #f4f6f8;
+
             color: #172033;
+
         }
+
 
         /* HEADER */
 
         header {
+
             background: #101828;
+
             color: white;
-            padding: 18px 25px;
+
+            padding: 18px 22px;
 
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
         }
+
 
         .logo {
+
             font-size: 25px;
+
             font-weight: bold;
+
         }
+
 
         .logo span {
+
             color: #45d483;
+
         }
+
 
         .version {
+
             background: #1f2937;
-            padding: 7px 12px;
+
+            padding: 7px 11px;
+
             border-radius: 20px;
-            font-size: 12px;
+
+            font-size: 11px;
+
             color: #cbd5e1;
+
         }
 
-        /* CONTENIDO */
+
+
+        /* CONTENEDOR */
 
         main {
+
             max-width: 1050px;
+
             margin: auto;
-            padding: 30px 18px 50px;
+
+            padding: 28px 18px 50px;
+
         }
+
+
 
         /* HERO */
 
         .hero {
-            background: linear-gradient(
-                135deg,
-                #102a43,
-                #176b4d
-            );
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #102a43,
+                    #176b4d
+                );
 
             color: white;
+
             padding: 35px;
-            border-radius: 25px;
-            margin-bottom: 25px;
+
+            border-radius: 24px;
+
+            margin-bottom: 22px;
+
         }
+
 
         .hero h1 {
+
             font-size: 42px;
+
             margin-bottom: 10px;
+
         }
 
+
         .hero p {
+
             color: #dcefe6;
+
             font-size: 17px;
+
             line-height: 1.5;
+
         }
+
+
 
         /* GRID */
 
         .grid {
+
             display: grid;
-            grid-template-columns: 1.2fr .8fr;
+
+            grid-template-columns:
+                1.2fr
+                .8fr;
+
             gap: 20px;
+
         }
 
-        /* TARJETAS */
+
+
+        /* CARD */
 
         .card {
+
             background: white;
+
             border-radius: 20px;
+
             padding: 24px;
 
             border: 1px solid #e6eaf0;
 
             box-shadow:
-                0 8px 25px rgba(16, 24, 40, .06);
+                0 8px 25px
+                rgba(16,24,40,.06);
+
         }
 
+
         .card h2 {
+
             margin-bottom: 20px;
+
         }
+
+
 
         /* FORMULARIO */
 
         label {
+
             display: block;
+
             font-weight: bold;
+
             font-size: 14px;
 
             margin-top: 16px;
+
             margin-bottom: 7px;
+
         }
 
+
         input {
+
             width: 100%;
 
             padding: 14px;
 
-            border: 1px solid #d7dce5;
+            border:
+
+                1px solid
+                #d7dce5;
 
             border-radius: 12px;
 
             font-size: 15px;
+
         }
+
 
         input:focus {
-            outline: 2px solid rgba(69, 212, 131, .3);
+
+            outline:
+
+                2px solid
+                rgba(69,212,131,.25);
 
             border-color: #45d483;
+
         }
+
+
 
         /* BOTÓN */
 
         button {
+
             width: 100%;
 
             border: none;
@@ -158,62 +258,146 @@
             font-weight: bold;
 
             cursor: pointer;
+
         }
 
+
         button:hover {
+
             background: #11894c;
+
         }
+
+
+        button:disabled {
+
+            background: #98a2b3;
+
+            cursor: wait;
+
+        }
+
+
 
         /* RESULTADO */
 
         .result {
+
             margin-top: 20px;
 
             background: #f0faf5;
 
-            border: 1px solid #cdebd9;
+            border:
+
+                1px solid
+                #cdebd9;
 
             border-radius: 16px;
 
             padding: 18px;
+
         }
 
+
         .row {
+
             display: flex;
 
-            justify-content: space-between;
+            justify-content:
+                space-between;
+
+            gap: 15px;
 
             padding: 10px 0;
 
-            border-bottom: 1px solid #e5eee9;
+            border-bottom:
+                1px solid
+                #e5eee9;
+
         }
+
 
         .row:last-child {
+
             border-bottom: none;
+
         }
 
+
         .price {
+
             font-size: 32px;
 
             font-weight: 900;
 
             color: #13834a;
+
+            margin-top: 5px;
+
         }
 
+
+        .loading {
+
+            margin-top: 15px;
+
+            color: #667085;
+
+            font-size: 14px;
+
+            display: none;
+
+        }
+
+
+        .error {
+
+            margin-top: 15px;
+
+            padding: 12px;
+
+            border-radius: 10px;
+
+            background: #fff1f0;
+
+            border:
+                1px solid
+                #f3c4c0;
+
+            color: #b42318;
+
+            display: none;
+
+            font-size: 14px;
+
+            line-height: 1.4;
+
+        }
+
+
         .muted {
+
             color: #667085;
 
             font-size: 13px;
 
             margin-top: 10px;
+
+            line-height: 1.4;
+
         }
+
+
 
         /* TARIFAS */
 
         .notice {
+
             background: #fff8e7;
 
-            border: 1px solid #f4df9b;
+            border:
+                1px solid
+                #f4df9b;
 
             padding: 13px;
 
@@ -224,36 +408,52 @@
             margin-top: 20px;
 
             line-height: 1.5;
+
         }
 
+
         ul {
+
             padding-left: 20px;
 
             line-height: 1.9;
 
             color: #475467;
+
         }
+
+
 
         /* CELULAR */
 
         @media (max-width: 800px) {
 
             .grid {
+
                 grid-template-columns: 1fr;
+
             }
+
 
             .hero {
+
                 padding: 25px;
+
             }
 
+
             .hero h1 {
+
                 font-size: 30px;
+
             }
 
         }
 
     </style>
+
 </head>
+
 
 
 <body>
@@ -262,14 +462,20 @@
 <header>
 
     <div class="logo">
+
         Rápido<span>Ya</span> 🛵
+
     </div>
 
+
     <div class="version">
-        PRIMERA VERSIÓN
+
+        V2
+
     </div>
 
 </header>
+
 
 
 <main>
@@ -280,12 +486,18 @@
     <section class="hero">
 
         <h1>
-            Domicilios rápidos en tu ciudad.
+
+            Domicilios rápidos.
+
         </h1>
 
+
         <p>
-            Indica dónde recogemos y dónde entregamos.
-            Calcula el valor del domicilio en segundos.
+
+            Escribe dónde recogemos y dónde entregamos.
+            Nosotros calculamos la ruta y el valor
+            estimado del domicilio.
+
         </p>
 
     </section>
@@ -295,54 +507,70 @@
     <div class="grid">
 
 
-        <!-- FORMULARIO -->
+        <!-- SOLICITUD -->
 
         <section class="card">
 
+
             <h2>
+
                 📦 Solicitar domicilio
+
             </h2>
 
 
-            <label>
-                📍 Lugar de recogida
+
+            <!-- RECOGIDA -->
+
+            <label for="pickup">
+
+                📍 ¿Dónde recogemos?
+
             </label>
 
+
             <input
+
                 id="pickup"
+
                 type="text"
-                placeholder="Ej: Centro"
+
+                placeholder="Ej: Centro, Tuluá"
+
             >
 
 
 
-            <label>
-                🏠 Lugar de entrega
+            <!-- ENTREGA -->
+
+            <label for="dropoff">
+
+                🏠 ¿Dónde entregamos?
+
             </label>
 
+
             <input
+
                 id="dropoff"
+
                 type="text"
-                placeholder="Ej: Barrio San Luis"
+
+                placeholder="Ej: San Luis, Tuluá"
+
             >
 
 
 
-            <label>
-                📏 Distancia estimada (km)
-            </label>
+            <!-- BOTÓN -->
 
-            <input
-                id="distance"
-                type="number"
-                min="0"
-                step="0.1"
-                placeholder="Ej: 3.5"
+            <button
+
+                id="calculateButton"
+
+                onclick="calculateRoute()"
+
             >
-
-
-
-            <button onclick="calculate()">
 
                 CALCULAR DOMICILIO
 
@@ -350,22 +578,61 @@
 
 
 
+            <!-- CARGANDO -->
+
+            <div
+
+                id="loading"
+
+                class="loading"
+
+            >
+
+                🔎 Buscando las direcciones
+                y calculando la ruta...
+
+            </div>
+
+
+
+            <!-- ERROR -->
+
+            <div
+
+                id="error"
+
+                class="error"
+
+            ></div>
+
+
+
             <!-- RESULTADO -->
 
             <div
+
                 id="result"
+
                 class="result"
+
                 style="display:none"
+
             >
 
+
                 <div class="row">
 
                     <span>
-                        Distancia
+
+                        📍 Recogida
+
                     </span>
 
-                    <strong id="km">
-                    </strong>
+                    <strong
+
+                        id="pickupResult"
+
+                    ></strong>
 
                 </div>
 
@@ -374,48 +641,90 @@
                 <div class="row">
 
                     <span>
-                        Tarifa
+
+                        🏠 Entrega
+
                     </span>
 
-                    <strong id="base">
-                    </strong>
+                    <strong
+
+                        id="dropoffResult"
+
+                    ></strong>
 
                 </div>
 
 
 
-                <div>
+                <div class="row">
+
+                    <span>
+
+                        📏 Distancia
+
+                    </span>
+
+                    <strong
+
+                        id="distanceResult"
+
+                    ></strong>
+
+                </div>
+
+
+
+                <div
+
+                    style="
+                        margin-top:15px;
+                    "
+
+                >
 
                     <p>
-                        Total del domicilio
+
+                        💰 Valor del domicilio
+
                     </p>
 
+
                     <div
-                        id="total"
+
+                        id="priceResult"
+
                         class="price"
+
                     >
+
                     </div>
 
                 </div>
 
 
 
-                <button onclick="requestOrder()">
+                <button
 
-                    SOLICITAR DOMICILIO
+                    onclick="requestOrder()"
+
+                >
+
+                    📲 SOLICITAR DOMICILIO
 
                 </button>
 
 
+
                 <p class="muted">
 
-                    En la siguiente versión
-                    conectaremos este botón
-                    directamente con WhatsApp.
+                    El siguiente paso será conectar
+                    este botón directamente con WhatsApp.
 
                 </p>
 
+
             </div>
+
 
         </section>
 
@@ -425,8 +734,11 @@
 
         <aside class="card">
 
+
             <h2>
-                💰 Tarifas de prueba
+
+                💰 Tarifas
+
             </h2>
 
 
@@ -434,11 +746,15 @@
             <div class="row">
 
                 <span>
-                    0 – 2 km
+
+                    Hasta 2 km
+
                 </span>
 
                 <strong>
+
                     $5.000
+
                 </strong>
 
             </div>
@@ -448,11 +764,15 @@
             <div class="row">
 
                 <span>
+
                     2 – 4 km
+
                 </span>
 
                 <strong>
+
                     $7.000
+
                 </strong>
 
             </div>
@@ -462,11 +782,15 @@
             <div class="row">
 
                 <span>
+
                     4 – 6 km
+
                 </span>
 
                 <strong>
+
                     $9.000
+
                 </strong>
 
             </div>
@@ -476,11 +800,15 @@
             <div class="row">
 
                 <span>
+
                     6 – 8 km
+
                 </span>
 
                 <strong>
+
                     $11.000
+
                 </strong>
 
             </div>
@@ -490,11 +818,15 @@
             <div class="row">
 
                 <span>
+
                     Más de 8 km
+
                 </span>
 
                 <strong>
+
                     Consultar
+
                 </strong>
 
             </div>
@@ -503,13 +835,13 @@
 
             <div class="notice">
 
-                ⚠️ Estas tarifas son solamente
-                de demostración.
+                ⚠️ Estas son tarifas de prueba.
 
                 <br><br>
 
-                Después podemos poner
-                las tarifas reales que tú decidas.
+                Después podemos crear
+                exactamente la fórmula de cobro
+                que tú quieras.
 
             </div>
 
@@ -526,26 +858,37 @@
             <ul>
 
                 <li>
-                    Cálculo automático por ruta
+
+                    📲 WhatsApp
+
                 </li>
 
                 <li>
-                    Pedidos por WhatsApp
+
+                    🛵 Sistema de repartidores
+
                 </li>
 
                 <li>
-                    Panel administrativo
+
+                    📦 Historial de pedidos
+
                 </li>
 
                 <li>
-                    Seguimiento del domicilio
+
+                    📍 Seguimiento
+
                 </li>
 
                 <li>
-                    Sistema para repartidores
+
+                    🧑‍💼 Panel administrativo
+
                 </li>
 
             </ul>
+
 
         </aside>
 
@@ -562,13 +905,30 @@
 
 /*
 ====================================================
-RÁPIDOYA
-SISTEMA DE TARIFAS
+RÁPIDOYA V2
+====================================================
+
+1. Busca las direcciones con Nominatim.
+2. Obtiene coordenadas.
+3. Envía las coordenadas a OSRM.
+4. Obtiene distancia de la ruta.
+5. Calcula tarifa.
 ====================================================
 */
 
 
-let currentTotal = 0;
+
+let currentOrder = {
+
+    pickup: "",
+
+    dropoff: "",
+
+    distance: 0,
+
+    price: 0
+
+};
 
 
 
@@ -579,12 +939,19 @@ FORMATO DE DINERO
 function money(value) {
 
     return new Intl.NumberFormat(
+
         "es-CO",
+
         {
+
             style: "currency",
+
             currency: "COP",
+
             maximumFractionDigits: 0
+
         }
+
     ).format(value);
 
 }
@@ -592,25 +959,264 @@ function money(value) {
 
 
 /*
-CALCULAR DOMICILIO
+ESCAPAR TEXTO
 */
 
-function calculate() {
+function cleanText(text) {
+
+    return text
+        .replace(/[<>]/g, "")
+        .trim();
+
+}
 
 
-    const distance =
-        parseFloat(
-            document.getElementById("distance").value
+
+/*
+BUSCAR DIRECCIÓN
+*/
+
+async function geocode(address) {
+
+
+    const url =
+
+        "https://nominatim.openstreetmap.org/search?" +
+
+        new URLSearchParams({
+
+            q: address + ", Colombia",
+
+            format: "json",
+
+            limit: "1",
+
+            countrycodes: "co",
+
+            addressdetails: "1"
+
+        });
+
+
+
+    const response =
+
+        await fetch(url);
+
+
+
+    if (!response.ok) {
+
+        throw new Error(
+
+            "No se pudo consultar el servicio de direcciones."
+
         );
+
+    }
+
+
+
+    const data =
+
+        await response.json();
+
+
+
+    if (!data.length) {
+
+        throw new Error(
+
+            'No encontramos "' +
+            address +
+            '". Intenta escribir una dirección más completa.'
+
+        );
+
+    }
+
+
+
+    return {
+
+        lat: parseFloat(data[0].lat),
+
+        lon: parseFloat(data[0].lon),
+
+        name: data[0].display_name
+
+    };
+
+}
+
+
+
+/*
+CALCULAR RUTA
+*/
+
+async function getRoute(
+
+    pickup,
+
+    dropoff
+
+) {
+
+
+    const coordinates =
+
+        pickup.lon +
+        "," +
+        pickup.lat +
+        ";" +
+        dropoff.lon +
+        "," +
+        dropoff.lat;
+
+
+
+    const url =
+
+        "https://router.project-osrm.org/route/v1/driving/" +
+
+        coordinates +
+
+        "?overview=false";
+
+
+
+    const response =
+
+        await fetch(url);
+
+
+
+    if (!response.ok) {
+
+        throw new Error(
+
+            "No se pudo calcular la ruta."
+
+        );
+
+    }
+
+
+
+    const data =
+
+        await response.json();
+
 
 
     if (
-        !Number.isFinite(distance) ||
-        distance < 0
+        data.code !== "Ok" ||
+        !data.routes ||
+        !data.routes.length
     ) {
 
-        alert(
-            "Ingresa una distancia válida."
+        throw new Error(
+
+            "No encontramos una ruta entre esos lugares."
+
+        );
+
+    }
+
+
+
+    return data.routes[0];
+
+}
+
+
+
+/*
+CALCULAR PRECIO
+*/
+
+function calculatePrice(
+
+    distanceKm
+
+) {
+
+
+    if (distanceKm <= 2) {
+
+        return 5000;
+
+    }
+
+
+    if (distanceKm <= 4) {
+
+        return 7000;
+
+    }
+
+
+    if (distanceKm <= 6) {
+
+        return 9000;
+
+    }
+
+
+    if (distanceKm <= 8) {
+
+        return 11000;
+
+    }
+
+
+    return null;
+
+}
+
+
+
+/*
+CALCULAR TODO
+*/
+
+async function calculateRoute() {
+
+
+    const pickupInput =
+
+        cleanText(
+
+            document
+                .getElementById("pickup")
+                .value
+
+        );
+
+
+
+    const dropoffInput =
+
+        cleanText(
+
+            document
+                .getElementById("dropoff")
+                .value
+
+        );
+
+
+
+    if (
+        !pickupInput ||
+        !dropoffInput
+    ) {
+
+        showError(
+
+            "Completa el lugar de recogida y el lugar de entrega."
+
         );
 
         return;
@@ -619,99 +1225,220 @@ function calculate() {
 
 
 
-    let price;
+    const button =
+
+        document
+            .getElementById(
+                "calculateButton"
+            );
 
 
 
-    /*
-    TARIFAS
-    */
+    const loading =
 
-    if (distance <= 2) {
-
-        price = 5000;
-
-    }
-
-    else if (distance <= 4) {
-
-        price = 7000;
-
-    }
-
-    else if (distance <= 6) {
-
-        price = 9000;
-
-    }
-
-    else if (distance <= 8) {
-
-        price = 11000;
-
-    }
-
-    else {
-
-        price = null;
-
-    }
+        document
+            .getElementById(
+                "loading"
+            );
 
 
 
-    /*
-    MOSTRAR RESULTADO
-    */
+    const result =
 
-    document
-        .getElementById("result")
-        .style.display = "block";
-
-
-
-    document
-        .getElementById("km")
-        .textContent =
-        distance.toFixed(1) + " km";
+        document
+            .getElementById(
+                "result"
+            );
 
 
 
-    if (price === null) {
+    button.disabled = true;
+
+    button.textContent =
+
+        "CALCULANDO...";
+
+
+
+    loading.style.display = "block";
+
+    result.style.display = "none";
+
+    hideError();
+
+
+
+    try {
+
+
+        /*
+        BUSCAR RECOGIDA
+        */
+
+        const pickup =
+
+            await geocode(
+                pickupInput
+            );
+
+
+
+        /*
+        PEQUEÑA PAUSA
+
+        Evitamos lanzar inmediatamente
+        otra consulta al servicio público.
+        */
+
+        await sleep(1100);
+
+
+
+        /*
+        BUSCAR ENTREGA
+        */
+
+        const dropoff =
+
+            await geocode(
+                dropoffInput
+            );
+
+
+
+        /*
+        CALCULAR RUTA
+        */
+
+        const route =
+
+            await getRoute(
+                pickup,
+                dropoff
+            );
+
+
+
+        /*
+        METROS → KM
+        */
+
+        const distanceKm =
+
+            route.distance / 1000;
+
+
+
+        /*
+        PRECIO
+        */
+
+        const price =
+
+            calculatePrice(
+                distanceKm
+            );
+
+
+
+        /*
+        GUARDAR PEDIDO
+        */
+
+        currentOrder = {
+
+            pickup:
+                pickupInput,
+
+            dropoff:
+                dropoffInput,
+
+            distance:
+                distanceKm,
+
+            price:
+                price
+
+        };
+
+
+
+        /*
+        MOSTRAR
+        */
+
+        document
+            .getElementById(
+                "pickupResult"
+            )
+            .textContent =
+            pickupInput;
+
 
 
         document
-            .getElementById("base")
+            .getElementById(
+                "dropoffResult"
+            )
             .textContent =
-            "Consultar";
+            dropoffInput;
+
 
 
         document
-            .getElementById("total")
+            .getElementById(
+                "distanceResult"
+            )
             .textContent =
-            "Consultar";
+
+            distanceKm.toFixed(2)
+            + " km";
 
 
-        currentTotal = 0;
+
+        document
+            .getElementById(
+                "priceResult"
+            )
+            .textContent =
+
+            price === null
+
+                ? "Consultar"
+
+                : money(price);
+
+
+
+        result.style.display = "block";
 
 
     }
 
-    else {
+    catch (error) {
 
 
-        document
-            .getElementById("base")
-            .textContent =
-            money(price);
+        showError(
+
+            error.message ||
+
+            "Ocurrió un error calculando el domicilio."
+
+        );
+
+    }
 
 
-        document
-            .getElementById("total")
-            .textContent =
-            money(price);
+    finally {
 
 
-        currentTotal = price;
+        button.disabled = false;
+
+        button.textContent =
+
+            "CALCULAR DOMICILIO";
+
+        loading.style.display = "none";
 
     }
 
@@ -720,31 +1447,80 @@ function calculate() {
 
 
 /*
-SOLICITAR DOMICILIO
+ESPERA
+*/
+
+function sleep(ms) {
+
+    return new Promise(
+
+        resolve =>
+            setTimeout(resolve, ms)
+
+    );
+
+}
+
+
+
+/*
+ERROR
+*/
+
+function showError(message) {
+
+
+    const error =
+
+        document
+            .getElementById(
+                "error"
+            );
+
+
+
+    error.textContent =
+
+        "⚠️ " + message;
+
+
+
+    error.style.display = "block";
+
+}
+
+
+
+function hideError() {
+
+
+    document
+        .getElementById(
+            "error"
+        )
+        .style.display = "none";
+
+}
+
+
+
+/*
+SOLICITAR PEDIDO
+
+POR AHORA SOLO MOSTRAMOS
+LA INFORMACIÓN.
+
+WHATSAPP LO CONECTAMOS
+EN LA SIGUIENTE VERSIÓN.
 */
 
 function requestOrder() {
 
 
-    const pickup =
-        document
-        .getElementById("pickup")
-        .value
-        .trim();
-
-
-    const dropoff =
-        document
-        .getElementById("dropoff")
-        .value
-        .trim();
-
-
-    if (!pickup || !dropoff) {
-
-        alert(
-            "Completa el lugar de recogida y entrega."
-        );
+    if (
+        !currentOrder.pickup ||
+        !currentOrder.dropoff
+    ) {
 
         return;
 
@@ -753,20 +1529,32 @@ function requestOrder() {
 
 
     alert(
-        "¡Pedido preparado! 🚀\n\n" +
 
-        "Recogida: " +
-        pickup +
+        "🛵 PEDIDO PREPARADO\n\n" +
 
-        "\nEntrega: " +
-        dropoff +
+        "📍 Recoger:\n" +
 
-        "\nValor: " +
+        currentOrder.pickup +
+
+        "\n\n🏠 Entregar:\n" +
+
+        currentOrder.dropoff +
+
+        "\n\n📏 Distancia:\n" +
+
+        currentOrder.distance
+            .toFixed(2) +
+
+        " km\n\n💰 Valor:\n" +
 
         (
-            currentTotal
-            ? money(currentTotal)
-            : "Consultar"
+            currentOrder.price === null
+
+                ? "Consultar"
+
+                : money(
+                    currentOrder.price
+                )
         )
 
     );
@@ -778,4 +1566,5 @@ function requestOrder() {
 
 
 </body>
+
 </html>

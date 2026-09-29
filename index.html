@@ -70,12 +70,12 @@
     <!-- Paso 1: Cotización básica solo escribiendo el barrio -->
     <div class="input-group">
       <label>📍 Barrio u Origen (Recogida en Tuluá):</label>
-      <input type="text" id="origenInput" placeholder="Ej: Centro, San Luis, Salesiano" value="Centro">
+      <input type="text" id="origenInput" placeholder="Ej: Centro, San Luis, Salesiano">
     </div>
 
     <div class="input-group">
       <label>🏁 Barrio u Destino (Entrega en Tuluá):</label>
-      <input type="text" id="destinoInput" placeholder="Ej: Progresar, Victoria, El Príncipe" value="Progresar">
+      <input type="text" id="destinoInput" placeholder="Ej: Progresar, Victoria, El Príncipe">
     </div>
 
     <button class="btn btn-primary" onclick="calcularCotizacion()">🔍 Calcular Tarifa</button>
@@ -94,9 +94,14 @@
     <div class="modal">
       <h2 id="authModalTitle">Iniciar Sesión</h2>
       
+      <div class="input-group" id="groupUsername" style="display:none;">
+        <label>👤 Nombre de Usuario (Único):</label>
+        <input type="text" id="authUsername" placeholder="Ej: cristian_01">
+      </div>
+
       <div class="input-group" id="groupNombre" style="display:none;">
-        <label>👤 Nombre Completo:</label>
-        <input type="text" id="authNombre" placeholder="Tu nombre">
+        <label>📛 Nombre Completo:</label>
+        <input type="text" id="authNombre" placeholder="Tu nombre real">
       </div>
 
       <div class="input-group">
@@ -215,7 +220,8 @@
         usuarioActual.profile = data;
         document.getElementById('guestButtons').style.display = 'none';
         document.getElementById('userBadge').style.display = 'block';
-        document.getElementById('userNameTxt').innerText = `👋 ${data.nombre}`;
+        const displayUser = data.username ? `@${data.username}` : data.nombre;
+        document.getElementById('userNameTxt').innerText = `👋 ${displayUser}`;
       }
     }
 
@@ -225,12 +231,14 @@
       document.getElementById('modalAuth').style.display = 'flex';
       if (modo === 'register') {
         document.getElementById('authModalTitle').innerText = 'Crear Cuenta';
+        document.getElementById('groupUsername').style.display = 'block';
         document.getElementById('groupNombre').style.display = 'block';
         document.getElementById('groupTelefono').style.display = 'block';
         document.getElementById('groupDireccion').style.display = 'block';
         document.getElementById('btnAuthSubmit').innerText = 'Registrarse';
       } else {
         document.getElementById('authModalTitle').innerText = 'Iniciar Sesión';
+        document.getElementById('groupUsername').style.display = 'none';
         document.getElementById('groupNombre').style.display = 'none';
         document.getElementById('groupTelefono').style.display = 'none';
         document.getElementById('groupDireccion').style.display = 'none';
@@ -245,12 +253,20 @@
       const password = document.getElementById('authPassword').value;
 
       if (authMode === 'register') {
+        const username = document.getElementById('authUsername').value.trim().toLowerCase();
         const nombre = document.getElementById('authNombre').value;
         const telefono = document.getElementById('authTelefono').value;
         const direccion = document.getElementById('authDireccion').value;
 
-        if (!email || !password || !nombre || !telefono) {
+        if (!email || !password || !nombre || !telefono || !username) {
           alert('Por favor completa todos los campos requeridos.');
+          return;
+        }
+
+        // Verificar si el username ya existe
+        const { data: existingUser } = await supabaseClient.from('usuarios').select('username').eq('username', username).single();
+        if (existingUser) {
+          alert('El nombre de usuario ya está ocupado. Elige otro.');
           return;
         }
 
@@ -260,6 +276,7 @@
         if (data.user) {
           await supabaseClient.from('usuarios').insert([{
             id: data.user.id,
+            username: username,
             nombre: nombre,
             telefono: telefono,
             direccion: direccion || ''
@@ -268,7 +285,7 @@
           location.reload();
         }
       } else {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabaseClient.signInWithPassword({ email, password });
         if (error) { alert('Error: ' + error.message); return; }
         location.reload();
       }
@@ -289,7 +306,6 @@
         return;
       }
 
-      // Añadir automáticamente ", Tuluá, Valle del Cauca, Colombia"
       const origen = `${origenRaw}, Tulua, Valle del Cauca, Colombia`;
       const destino = `${destinoRaw}, Tulua, Valle del Cauca, Colombia`;
 
@@ -357,7 +373,6 @@
       document.getElementById('barrioOrigenModal').value = datosCotizacion.origen;
       document.getElementById('barrioDestinoModal').value = datosCotizacion.destino;
 
-      // Si el usuario inició sesión, autorrellenar sus datos
       if (usuarioActual && usuarioActual.profile) {
         document.getElementById('clienteNombre').value = usuarioActual.profile.nombre || '';
         document.getElementById('clienteTelefono').value = usuarioActual.profile.telefono || '';
@@ -369,7 +384,24 @@
 
     function cerrarModalPedido() { document.getElementById('modalPedido').style.display = 'none'; }
 
-    // Enviar WhatsApp Completo (Codificado con encodeURIComponent para evitar cortes)
+    // Función de reinicio completo del formulario
+    function reiniciarCotizador() {
+      document.getElementById('origenInput').value = '';
+      document.getElementById('destinoInput').value = '';
+      document.getElementById('dirExactaOrigen').value = '';
+      document.getElementById('dirExactaDestino').value = '';
+      document.getElementById('observacionesInput').value = '';
+      
+      document.getElementById('resultBox').style.display = 'none';
+      if (routeLayer) {
+        map.removeLayer(routeLayer);
+        routeLayer = null;
+      }
+      map.setView([4.084, -76.198], 13);
+      datosCotizacion = {};
+    }
+
+    // Enviar a WhatsApp y reiniciar app
     function enviarAWhatsApp() {
       const nombre = document.getElementById('clienteNombre').value;
       const telefono = document.getElementById('clienteTelefono').value;
@@ -382,8 +414,12 @@
         return;
       }
 
-      const mensajeTexto = `🚴‍♂️️ *¡NUEVO DOMICILIO - TULUÁ EXPRESS!*\n\n` +
-        `👤 *Cliente:* ${nombre}\n` +
+      const userTag = (usuarioActual && usuarioActual.profile && usuarioActual.profile.username) 
+        ? ` (@${usuarioActual.profile.username})` 
+        : '';
+
+      const mensajeTexto = `🚴‍♂ *¡NUEVO DOMICILIO - TULUÁ EXPRESS!*\n\n` +
+        `👤 *Cliente:* ${nombre}${userTag}\n` +
         `📞 *Teléfono:* ${telefono}\n\n` +
         `📍 *RECOGER EN:*\n` +
         `• Barrio: ${datosCotizacion.origen}\n` +
@@ -399,6 +435,7 @@
       
       window.open(urlWhatsApp, '_blank');
       cerrarModalPedido();
+      reiniciarCotizador();
     }
   </script>
 </body>

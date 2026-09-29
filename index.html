@@ -3,457 +3,482 @@
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
-    <title>RápidoYa | Domicilios</title>
+<title>RápidoYa | Domicilios en Tuluá</title>
 
 
-    <style>
+<!-- LEAFLET -->
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+<link
+rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
 
 
-        body {
+<style>
 
-            font-family:
-                Arial,
-                Helvetica,
-                sans-serif;
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
-            background: #f4f6f8;
 
-            color: #172033;
+body {
 
-        }
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
 
+    background: #f4f6f8;
 
-        /* HEADER */
+    color: #172033;
 
-        header {
+}
 
-            background: #101828;
 
-            color: white;
+/* =========================
+   HEADER
+========================= */
 
-            padding: 18px 22px;
+header {
 
-            display: flex;
+    background: #101828;
 
-            justify-content: space-between;
+    color: white;
 
-            align-items: center;
+    padding: 18px 22px;
 
-        }
+    display: flex;
 
+    justify-content: space-between;
 
-        .logo {
+    align-items: center;
 
-            font-size: 25px;
+}
 
-            font-weight: bold;
 
-        }
+.logo {
 
+    font-size: 25px;
 
-        .logo span {
+    font-weight: bold;
 
-            color: #45d483;
+}
 
-        }
 
+.logo span {
 
-        .version {
+    color: #45d483;
 
-            background: #1f2937;
+}
 
-            padding: 7px 11px;
 
-            border-radius: 20px;
+.city {
 
-            font-size: 11px;
+    font-size: 12px;
 
-            color: #cbd5e1;
+    color: #b8c3d1;
 
-        }
+}
 
 
+/* =========================
+   CONTENEDOR
+========================= */
 
-        /* CONTENEDOR */
+main {
 
-        main {
+    max-width: 1100px;
 
-            max-width: 1050px;
+    margin: auto;
 
-            margin: auto;
+    padding: 25px 16px 50px;
 
-            padding: 28px 18px 50px;
+}
 
-        }
 
+/* =========================
+   HERO
+========================= */
 
+.hero {
 
-        /* HERO */
+    background:
+        linear-gradient(
+            135deg,
+            #102a43,
+            #176b4d
+        );
 
-        .hero {
+    color: white;
 
-            background:
-                linear-gradient(
-                    135deg,
-                    #102a43,
-                    #176b4d
-                );
+    padding: 30px;
 
-            color: white;
+    border-radius: 24px;
 
-            padding: 35px;
+    margin-bottom: 20px;
 
-            border-radius: 24px;
+}
 
-            margin-bottom: 22px;
 
-        }
+.hero h1 {
 
+    font-size: 38px;
 
-        .hero h1 {
+    margin-bottom: 10px;
 
-            font-size: 42px;
+}
 
-            margin-bottom: 10px;
 
-        }
+.hero p {
 
+    color: #dcefe6;
 
-        .hero p {
+    line-height: 1.5;
 
-            color: #dcefe6;
+}
 
-            font-size: 17px;
 
-            line-height: 1.5;
+/* =========================
+   GRID
+========================= */
 
-        }
+.grid {
 
+    display: grid;
 
+    grid-template-columns:
+        380px
+        1fr;
 
-        /* GRID */
+    gap: 20px;
 
-        .grid {
+}
 
-            display: grid;
 
-            grid-template-columns:
-                1.2fr
-                .8fr;
+/* =========================
+   CARD
+========================= */
 
-            gap: 20px;
+.card {
 
-        }
+    background: white;
 
+    border-radius: 20px;
 
+    padding: 22px;
 
-        /* CARD */
+    border:
+        1px solid
+        #e6eaf0;
 
-        .card {
+    box-shadow:
+        0 8px 25px
+        rgba(16,24,40,.06);
 
-            background: white;
+}
 
-            border-radius: 20px;
 
-            padding: 24px;
+.card h2 {
 
-            border: 1px solid #e6eaf0;
+    margin-bottom: 18px;
 
-            box-shadow:
-                0 8px 25px
-                rgba(16,24,40,.06);
+}
 
-        }
 
+/* =========================
+   FORMULARIO
+========================= */
 
-        .card h2 {
+label {
 
-            margin-bottom: 20px;
+    display: block;
 
-        }
+    font-size: 14px;
 
+    font-weight: bold;
 
+    margin-top: 15px;
 
-        /* FORMULARIO */
+    margin-bottom: 7px;
 
-        label {
+}
 
-            display: block;
 
-            font-weight: bold;
+input {
 
-            font-size: 14px;
+    width: 100%;
 
-            margin-top: 16px;
+    padding: 14px;
 
-            margin-bottom: 7px;
+    border:
+        1px solid
+        #d7dce5;
 
-        }
+    border-radius: 12px;
 
+    font-size: 15px;
 
-        input {
+}
 
-            width: 100%;
 
-            padding: 14px;
+input:focus {
 
-            border:
+    outline:
+        2px solid
+        rgba(69,212,131,.25);
 
-                1px solid
-                #d7dce5;
+    border-color:
+        #45d483;
 
-            border-radius: 12px;
+}
 
-            font-size: 15px;
 
-        }
+/* =========================
+   BOTÓN
+========================= */
 
+button {
 
-        input:focus {
+    width: 100%;
 
-            outline:
+    border: none;
 
-                2px solid
-                rgba(69,212,131,.25);
+    padding: 14px;
 
-            border-color: #45d483;
+    margin-top: 18px;
 
-        }
+    border-radius: 12px;
 
+    background:
+        #16a05a;
 
+    color: white;
 
-        /* BOTÓN */
+    font-size: 15px;
 
-        button {
+    font-weight: bold;
 
-            width: 100%;
+    cursor: pointer;
 
-            border: none;
+}
 
-            padding: 14px;
 
-            margin-top: 20px;
+button:hover {
 
-            border-radius: 12px;
+    background:
+        #11894c;
 
-            background: #16a05a;
+}
 
-            color: white;
 
-            font-size: 15px;
+button:disabled {
 
-            font-weight: bold;
+    background:
+        #98a2b3;
 
-            cursor: pointer;
+    cursor: wait;
 
-        }
+}
 
 
-        button:hover {
+/* =========================
+   MAPA
+========================= */
 
-            background: #11894c;
+#map {
 
-        }
+    width: 100%;
 
+    height: 600px;
 
-        button:disabled {
+    border-radius: 18px;
 
-            background: #98a2b3;
+    overflow: hidden;
 
-            cursor: wait;
+}
 
-        }
 
+/* =========================
+   RESULTADO
+========================= */
 
+.result {
 
-        /* RESULTADO */
+    margin-top: 20px;
 
-        .result {
+    background:
+        #f0faf5;
 
-            margin-top: 20px;
+    border:
+        1px solid
+        #cdebd9;
 
-            background: #f0faf5;
+    border-radius: 16px;
 
-            border:
+    padding: 18px;
 
-                1px solid
-                #cdebd9;
+    display: none;
 
-            border-radius: 16px;
+}
 
-            padding: 18px;
 
-        }
+.row {
 
+    display: flex;
 
-        .row {
+    justify-content:
+        space-between;
 
-            display: flex;
+    gap: 15px;
 
-            justify-content:
-                space-between;
+    padding: 10px 0;
 
-            gap: 15px;
+    border-bottom:
+        1px solid
+        #e5eee9;
 
-            padding: 10px 0;
+}
 
-            border-bottom:
-                1px solid
-                #e5eee9;
 
-        }
+.row:last-child {
 
+    border-bottom: none;
 
-        .row:last-child {
+}
 
-            border-bottom: none;
 
-        }
+.price {
 
+    font-size: 32px;
 
-        .price {
+    font-weight: 900;
 
-            font-size: 32px;
+    color:
+        #13834a;
 
-            font-weight: 900;
+    margin-top: 5px;
 
-            color: #13834a;
+}
 
-            margin-top: 5px;
 
-        }
+.loading {
 
+    display: none;
 
-        .loading {
+    margin-top: 15px;
 
-            margin-top: 15px;
+    color:
+        #667085;
 
-            color: #667085;
+    font-size: 14px;
 
-            font-size: 14px;
+}
 
-            display: none;
 
-        }
+.error {
 
+    display: none;
 
-        .error {
+    margin-top: 15px;
 
-            margin-top: 15px;
+    padding: 12px;
 
-            padding: 12px;
+    border-radius: 10px;
 
-            border-radius: 10px;
+    background:
+        #fff1f0;
 
-            background: #fff1f0;
+    border:
+        1px solid
+        #f3c4c0;
 
-            border:
-                1px solid
-                #f3c4c0;
+    color:
+        #b42318;
 
-            color: #b42318;
+    font-size: 14px;
 
-            display: none;
+    line-height: 1.4;
 
-            font-size: 14px;
+}
 
-            line-height: 1.4;
 
-        }
+/* =========================
+   INFO
+========================= */
 
+.notice {
 
-        .muted {
+    background:
+        #fff8e7;
 
-            color: #667085;
+    border:
+        1px solid
+        #f4df9b;
 
-            font-size: 13px;
+    padding: 13px;
 
-            margin-top: 10px;
+    border-radius: 12px;
 
-            line-height: 1.4;
+    font-size: 13px;
 
-        }
+    line-height: 1.5;
 
+    margin-top: 15px;
 
+}
 
-        /* TARIFAS */
 
-        .notice {
+ul {
 
-            background: #fff8e7;
+    padding-left: 20px;
 
-            border:
-                1px solid
-                #f4df9b;
+    line-height: 1.9;
 
-            padding: 13px;
+    color:
+        #475467;
 
-            border-radius: 12px;
+}
 
-            font-size: 13px;
 
-            margin-top: 20px;
+/* =========================
+   MOBILE
+========================= */
 
-            line-height: 1.5;
+@media (max-width: 850px) {
 
-        }
+    .grid {
 
+        grid-template-columns: 1fr;
 
-        ul {
+    }
 
-            padding-left: 20px;
 
-            line-height: 1.9;
+    #map {
 
-            color: #475467;
+        height: 430px;
 
-        }
+    }
 
 
+    .hero h1 {
 
-        /* CELULAR */
+        font-size: 30px;
 
-        @media (max-width: 800px) {
+    }
 
-            .grid {
+}
 
-                grid-template-columns: 1fr;
 
-            }
-
-
-            .hero {
-
-                padding: 25px;
-
-            }
-
-
-            .hero h1 {
-
-                font-size: 30px;
-
-            }
-
-        }
-
-    </style>
+</style>
 
 </head>
-
 
 
 <body>
@@ -468,9 +493,9 @@
     </div>
 
 
-    <div class="version">
+    <div class="city">
 
-        V2
+        📍 Tuluá, Valle del Cauca
 
     </div>
 
@@ -481,441 +506,403 @@
 <main>
 
 
-    <!-- HERO -->
+<!-- =========================
+     HERO
+========================= -->
 
-    <section class="hero">
+<section class="hero">
 
-        <h1>
+    <h1>
 
-            Domicilios rápidos.
+        Domicilios en Tuluá.
 
-        </h1>
+    </h1>
 
 
-        <p>
+    <p>
 
-            Escribe dónde recogemos y dónde entregamos.
-            Nosotros calculamos la ruta y el valor
-            estimado del domicilio.
+        Indica dónde recogemos y dónde entregamos.
+        Calculamos la ruta, la distancia y el valor
+        aproximado de tu domicilio.
 
-        </p>
+    </p>
 
-    </section>
+</section>
 
 
 
-    <div class="grid">
+<div class="grid">
 
 
-        <!-- SOLICITUD -->
+<!-- =========================
+     FORMULARIO
+========================= -->
 
-        <section class="card">
+<section class="card">
 
+    <h2>
 
-            <h2>
+        📦 Solicitar domicilio
 
-                📦 Solicitar domicilio
+    </h2>
 
-            </h2>
 
+    <label>
 
+        📍 ¿Dónde recogemos?
 
-            <!-- RECOGIDA -->
+    </label>
 
-            <label for="pickup">
 
-                📍 ¿Dónde recogemos?
+    <input
 
-            </label>
+        id="pickup"
 
+        type="text"
 
-            <input
+        placeholder="Ej: Centro, Tuluá"
 
-                id="pickup"
+    >
 
-                type="text"
 
-                placeholder="Ej: Centro, Tuluá"
 
-            >
+    <label>
 
+        🏠 ¿Dónde entregamos?
 
+    </label>
 
-            <!-- ENTREGA -->
 
-            <label for="dropoff">
+    <input
 
-                🏠 ¿Dónde entregamos?
+        id="dropoff"
 
-            </label>
+        type="text"
 
+        placeholder="Ej: San Luis, Tuluá"
 
-            <input
+    >
 
-                id="dropoff"
 
-                type="text"
 
-                placeholder="Ej: San Luis, Tuluá"
+    <button
 
-            >
+        id="calculateButton"
 
+        onclick="calculateRoute()"
 
+    >
 
-            <!-- BOTÓN -->
+        🛵 CALCULAR DOMICILIO
 
-            <button
+    </button>
 
-                id="calculateButton"
 
-                onclick="calculateRoute()"
 
-            >
+    <div
 
-                CALCULAR DOMICILIO
+        id="loading"
 
-            </button>
+        class="loading"
 
+    >
 
-
-            <!-- CARGANDO -->
-
-            <div
-
-                id="loading"
-
-                class="loading"
-
-            >
-
-                🔎 Buscando las direcciones
-                y calculando la ruta...
-
-            </div>
-
-
-
-            <!-- ERROR -->
-
-            <div
-
-                id="error"
-
-                class="error"
-
-            ></div>
-
-
-
-            <!-- RESULTADO -->
-
-            <div
-
-                id="result"
-
-                class="result"
-
-                style="display:none"
-
-            >
-
-
-                <div class="row">
-
-                    <span>
-
-                        📍 Recogida
-
-                    </span>
-
-                    <strong
-
-                        id="pickupResult"
-
-                    ></strong>
-
-                </div>
-
-
-
-                <div class="row">
-
-                    <span>
-
-                        🏠 Entrega
-
-                    </span>
-
-                    <strong
-
-                        id="dropoffResult"
-
-                    ></strong>
-
-                </div>
-
-
-
-                <div class="row">
-
-                    <span>
-
-                        📏 Distancia
-
-                    </span>
-
-                    <strong
-
-                        id="distanceResult"
-
-                    ></strong>
-
-                </div>
-
-
-
-                <div
-
-                    style="
-                        margin-top:15px;
-                    "
-
-                >
-
-                    <p>
-
-                        💰 Valor del domicilio
-
-                    </p>
-
-
-                    <div
-
-                        id="priceResult"
-
-                        class="price"
-
-                    >
-
-                    </div>
-
-                </div>
-
-
-
-                <button
-
-                    onclick="requestOrder()"
-
-                >
-
-                    📲 SOLICITAR DOMICILIO
-
-                </button>
-
-
-
-                <p class="muted">
-
-                    El siguiente paso será conectar
-                    este botón directamente con WhatsApp.
-
-                </p>
-
-
-            </div>
-
-
-        </section>
-
-
-
-        <!-- INFORMACIÓN -->
-
-        <aside class="card">
-
-
-            <h2>
-
-                💰 Tarifas
-
-            </h2>
-
-
-
-            <div class="row">
-
-                <span>
-
-                    Hasta 2 km
-
-                </span>
-
-                <strong>
-
-                    $5.000
-
-                </strong>
-
-            </div>
-
-
-
-            <div class="row">
-
-                <span>
-
-                    2 – 4 km
-
-                </span>
-
-                <strong>
-
-                    $7.000
-
-                </strong>
-
-            </div>
-
-
-
-            <div class="row">
-
-                <span>
-
-                    4 – 6 km
-
-                </span>
-
-                <strong>
-
-                    $9.000
-
-                </strong>
-
-            </div>
-
-
-
-            <div class="row">
-
-                <span>
-
-                    6 – 8 km
-
-                </span>
-
-                <strong>
-
-                    $11.000
-
-                </strong>
-
-            </div>
-
-
-
-            <div class="row">
-
-                <span>
-
-                    Más de 8 km
-
-                </span>
-
-                <strong>
-
-                    Consultar
-
-                </strong>
-
-            </div>
-
-
-
-            <div class="notice">
-
-                ⚠️ Estas son tarifas de prueba.
-
-                <br><br>
-
-                Después podemos crear
-                exactamente la fórmula de cobro
-                que tú quieras.
-
-            </div>
-
-
-
-            <h2 style="margin-top:25px">
-
-                🚀 Próximamente
-
-            </h2>
-
-
-
-            <ul>
-
-                <li>
-
-                    📲 WhatsApp
-
-                </li>
-
-                <li>
-
-                    🛵 Sistema de repartidores
-
-                </li>
-
-                <li>
-
-                    📦 Historial de pedidos
-
-                </li>
-
-                <li>
-
-                    📍 Seguimiento
-
-                </li>
-
-                <li>
-
-                    🧑‍💼 Panel administrativo
-
-                </li>
-
-            </ul>
-
-
-        </aside>
-
+        🔎 Buscando direcciones
+        y calculando ruta...
 
     </div>
+
+
+
+    <div
+
+        id="error"
+
+        class="error"
+
+    ></div>
+
+
+
+    <!-- RESULTADO -->
+
+    <div
+
+        id="result"
+
+        class="result"
+
+    >
+
+        <div class="row">
+
+            <span>
+
+                📏 Distancia
+
+            </span>
+
+            <strong
+                id="distanceResult"
+            >
+
+            </strong>
+
+        </div>
+
+
+
+        <div class="row">
+
+            <span>
+
+                ⏱️ Tiempo estimado
+
+            </span>
+
+            <strong
+                id="timeResult"
+            >
+
+            </strong>
+
+        </div>
+
+
+
+        <div>
+
+            <p>
+
+                💰 Valor del domicilio
+
+            </p>
+
+
+            <div
+                id="priceResult"
+                class="price"
+            >
+
+            </div>
+
+        </div>
+
+
+
+        <button
+            onclick="requestOrder()"
+        >
+
+            📲 SOLICITAR DOMICILIO
+
+        </button>
+
+    </div>
+
+
+
+    <div class="notice">
+
+        📍 Por ahora el servicio está limitado
+        a <strong>Tuluá, Valle del Cauca</strong>.
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================
+     MAPA
+========================= -->
+
+<section class="card">
+
+    <h2>
+
+        🗺️ Ruta del domicilio
+
+    </h2>
+
+
+    <div id="map"></div>
+
+</section>
+
+
+</div>
+
+
+
+<!-- =========================
+     TARIFAS
+========================= -->
+
+<section
+    class="card"
+    style="margin-top:20px"
+>
+
+    <h2>
+
+        💰 Tarifas actuales de prueba
+
+    </h2>
+
+
+    <div class="row">
+
+        <span>
+            Hasta 2 km
+        </span>
+
+        <strong>
+            $5.000
+        </strong>
+
+    </div>
+
+
+    <div class="row">
+
+        <span>
+            2 – 4 km
+        </span>
+
+        <strong>
+            $7.000
+        </strong>
+
+    </div>
+
+
+    <div class="row">
+
+        <span>
+            4 – 6 km
+        </span>
+
+        <strong>
+            $9.000
+        </strong>
+
+    </div>
+
+
+    <div class="row">
+
+        <span>
+            6 – 8 km
+        </span>
+
+        <strong>
+            $11.000
+        </strong>
+
+    </div>
+
+
+    <div class="row">
+
+        <span>
+            Más de 8 km
+        </span>
+
+        <strong>
+            Consultar
+        </strong>
+
+    </div>
+
+</section>
 
 
 </main>
 
 
 
+<!-- LEAFLET -->
+
+<script
+src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
+
 <script>
 
 
-/*
-====================================================
-RÁPIDOYA V2
-====================================================
+/* =========================================
+   CONFIGURACIÓN DE TULUÁ
+========================================= */
 
-1. Busca las direcciones con Nominatim.
-2. Obtiene coordenadas.
-3. Envía las coordenadas a OSRM.
-4. Obtiene distancia de la ruta.
-5. Calcula tarifa.
-====================================================
+
+/*
+   Centro aproximado de Tuluá.
+
+   El mapa arranca aquí.
 */
 
+const TULUA_CENTER = [
+    4.0847,
+    -76.1954
+];
+
+
+/*
+   Zona aproximada de búsqueda.
+
+   Esto ayuda a evitar que una dirección
+   termine accidentalmente en otra ciudad.
+*/
+
+const TULUA_VIEWBOX =
+    "-76.27,4.14,-76.13,4.02";
+
+
+
+/* =========================================
+   MAPA
+========================================= */
+
+const map = L.map("map")
+    .setView(
+        TULUA_CENTER,
+        13
+    );
+
+
+/*
+   Mapa OpenStreetMap
+*/
+
+L.tileLayer(
+
+    "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+
+    {
+
+        maxZoom: 19,
+
+        attribution:
+            '&copy; OpenStreetMap contributors'
+
+    }
+
+).addTo(map);
+
+
+
+/* =========================================
+   VARIABLES
+========================================= */
+
+let pickupMarker = null;
+
+let dropoffMarker = null;
+
+let routeLine = null;
 
 
 let currentOrder = {
@@ -926,15 +913,17 @@ let currentOrder = {
 
     distance: 0,
 
+    time: 0,
+
     price: 0
 
 };
 
 
 
-/*
-FORMATO DE DINERO
-*/
+/* =========================================
+   FORMATO DINERO
+========================================= */
 
 function money(value) {
 
@@ -958,34 +947,36 @@ function money(value) {
 
 
 
-/*
-ESCAPAR TEXTO
-*/
-
-function cleanText(text) {
-
-    return text
-        .replace(/[<>]/g, "")
-        .trim();
-
-}
-
-
-
-/*
-BUSCAR DIRECCIÓN
-*/
+/* =========================================
+   BUSCAR DIRECCIÓN
+========================================= */
 
 async function geocode(address) {
 
 
-    const url =
+    /*
+       Forzamos Tuluá.
 
-        "https://nominatim.openstreetmap.org/search?" +
+       El usuario puede escribir:
 
+       "Centro"
+
+       "San Luis"
+
+       "Cra 26 # 25-20"
+
+       etc.
+    */
+
+    const searchText =
+        address +
+        ", Tuluá, Valle del Cauca, Colombia";
+
+
+    const params =
         new URLSearchParams({
 
-            q: address + ", Colombia",
+            q: searchText,
 
             format: "json",
 
@@ -993,14 +984,25 @@ async function geocode(address) {
 
             countrycodes: "co",
 
-            addressdetails: "1"
+            viewbox:
+                TULUA_VIEWBOX,
+
+            bounded:
+                "1",
+
+            addressdetails:
+                "1"
 
         });
 
 
+    const url =
+        "https://nominatim.openstreetmap.org/search?"
+        + params.toString();
+
+
 
     const response =
-
         await fetch(url);
 
 
@@ -1008,9 +1010,7 @@ async function geocode(address) {
     if (!response.ok) {
 
         throw new Error(
-
-            "No se pudo consultar el servicio de direcciones."
-
+            "No se pudo consultar el mapa."
         );
 
     }
@@ -1018,7 +1018,6 @@ async function geocode(address) {
 
 
     const data =
-
         await response.json();
 
 
@@ -1029,7 +1028,51 @@ async function geocode(address) {
 
             'No encontramos "' +
             address +
-            '". Intenta escribir una dirección más completa.'
+            '" dentro de Tuluá. ' +
+
+            "Prueba con una dirección más completa."
+
+        );
+
+    }
+
+
+
+    const result =
+        data[0];
+
+
+
+    const lat =
+        parseFloat(result.lat);
+
+
+    const lon =
+        parseFloat(result.lon);
+
+
+
+    /*
+       SEGURIDAD EXTRA:
+
+       Revisamos que el resultado
+       realmente mencione Tuluá.
+    */
+
+    const display =
+        result.display_name
+            .toLowerCase();
+
+
+
+    if (
+        !display.includes("tuluá") &&
+        !display.includes("tulua")
+    ) {
+
+        throw new Error(
+
+            "La dirección encontrada no pertenece a Tuluá."
 
         );
 
@@ -1039,11 +1082,12 @@ async function geocode(address) {
 
     return {
 
-        lat: parseFloat(data[0].lat),
+        lat: lat,
 
-        lon: parseFloat(data[0].lon),
+        lon: lon,
 
-        name: data[0].display_name
+        name:
+            result.display_name
 
     };
 
@@ -1051,14 +1095,13 @@ async function geocode(address) {
 
 
 
-/*
-CALCULAR RUTA
-*/
+/* =========================================
+   RUTA
+========================================= */
 
 async function getRoute(
 
     pickup,
-
     dropoff
 
 ) {
@@ -1069,7 +1112,9 @@ async function getRoute(
         pickup.lon +
         "," +
         pickup.lat +
+
         ";" +
+
         dropoff.lon +
         "," +
         dropoff.lat;
@@ -1082,12 +1127,11 @@ async function getRoute(
 
         coordinates +
 
-        "?overview=false";
+        "?overview=full&geometries=geojson";
 
 
 
     const response =
-
         await fetch(url);
 
 
@@ -1105,7 +1149,6 @@ async function getRoute(
 
 
     const data =
-
         await response.json();
 
 
@@ -1118,7 +1161,7 @@ async function getRoute(
 
         throw new Error(
 
-            "No encontramos una ruta entre esos lugares."
+            "No encontramos una ruta entre las dos direcciones."
 
         );
 
@@ -1132,9 +1175,9 @@ async function getRoute(
 
 
 
-/*
-CALCULAR PRECIO
-*/
+/* =========================================
+   PRECIO
+========================================= */
 
 function calculatePrice(
 
@@ -1177,46 +1220,32 @@ function calculatePrice(
 
 
 
-/*
-CALCULAR TODO
-*/
+/* =========================================
+   CALCULAR RUTA COMPLETA
+========================================= */
 
 async function calculateRoute() {
 
 
-    const pickupInput =
-
-        cleanText(
-
-            document
-                .getElementById("pickup")
-                .value
-
-        );
+    const pickup =
+        document
+        .getElementById("pickup")
+        .value
+        .trim();
 
 
-
-    const dropoffInput =
-
-        cleanText(
-
-            document
-                .getElementById("dropoff")
-                .value
-
-        );
+    const dropoff =
+        document
+        .getElementById("dropoff")
+        .value
+        .trim();
 
 
 
-    if (
-        !pickupInput ||
-        !dropoffInput
-    ) {
+    if (!pickup || !dropoff) {
 
         showError(
-
-            "Completa el lugar de recogida y el lugar de entrega."
-
+            "Escribe el lugar de recogida y el lugar de entrega."
         );
 
         return;
@@ -1226,43 +1255,40 @@ async function calculateRoute() {
 
 
     const button =
-
         document
-            .getElementById(
-                "calculateButton"
-            );
-
+        .getElementById(
+            "calculateButton"
+        );
 
 
     const loading =
-
         document
-            .getElementById(
-                "loading"
-            );
-
+        .getElementById(
+            "loading"
+        );
 
 
     const result =
-
         document
-            .getElementById(
-                "result"
-            );
+        .getElementById(
+            "result"
+        );
 
 
 
     button.disabled = true;
 
     button.textContent =
-
         "CALCULANDO...";
 
 
+    loading.style.display =
+        "block";
 
-    loading.style.display = "block";
 
-    result.style.display = "none";
+    result.style.display =
+        "none";
+
 
     hideError();
 
@@ -1272,22 +1298,18 @@ async function calculateRoute() {
 
 
         /*
-        BUSCAR RECOGIDA
+           PRIMERA DIRECCIÓN
         */
 
-        const pickup =
-
-            await geocode(
-                pickupInput
-            );
+        const pickupLocation =
+            await geocode(pickup);
 
 
 
         /*
-        PEQUEÑA PAUSA
-
-        Evitamos lanzar inmediatamente
-        otra consulta al servicio público.
+           Esperamos un segundo
+           porque Nominatim limita
+           las consultas.
         */
 
         await sleep(1100);
@@ -1295,46 +1317,56 @@ async function calculateRoute() {
 
 
         /*
-        BUSCAR ENTREGA
+           SEGUNDA DIRECCIÓN
         */
 
-        const dropoff =
-
-            await geocode(
-                dropoffInput
-            );
+        const dropoffLocation =
+            await geocode(dropoff);
 
 
 
         /*
-        CALCULAR RUTA
+           RUTA
         */
 
         const route =
-
             await getRoute(
-                pickup,
-                dropoff
+
+                pickupLocation,
+
+                dropoffLocation
+
             );
 
 
 
         /*
-        METROS → KM
+           DISTANCIA
         */
 
         const distanceKm =
-
-            route.distance / 1000;
+            route.distance /
+            1000;
 
 
 
         /*
-        PRECIO
+           TIEMPO
+        */
+
+        const timeMinutes =
+            Math.round(
+                route.duration /
+                60
+            );
+
+
+
+        /*
+           PRECIO
         */
 
         const price =
-
             calculatePrice(
                 distanceKm
             );
@@ -1342,19 +1374,22 @@ async function calculateRoute() {
 
 
         /*
-        GUARDAR PEDIDO
+           GUARDAMOS
         */
 
         currentOrder = {
 
             pickup:
-                pickupInput,
+                pickup,
 
             dropoff:
-                dropoffInput,
+                dropoff,
 
             distance:
                 distanceKm,
+
+            time:
+                timeMinutes,
 
             price:
                 price
@@ -1364,26 +1399,115 @@ async function calculateRoute() {
 
 
         /*
-        MOSTRAR
+           MARCADORES
         */
 
-        document
-            .getElementById(
-                "pickupResult"
+        clearMap();
+
+
+
+        pickupMarker =
+            L.marker(
+
+                [
+                    pickupLocation.lat,
+                    pickupLocation.lon
+                ]
+
             )
-            .textContent =
-            pickupInput;
+            .addTo(map)
+            .bindPopup(
+                "<strong>📍 Recogida</strong><br>" +
+                pickup
+            );
 
 
 
-        document
-            .getElementById(
-                "dropoffResult"
+        dropoffMarker =
+            L.marker(
+
+                [
+                    dropoffLocation.lat,
+                    dropoffLocation.lon
+                ]
+
             )
-            .textContent =
-            dropoffInput;
+            .addTo(map)
+            .bindPopup(
+                "<strong>🏠 Entrega</strong><br>" +
+                dropoff
+            );
 
 
+
+        /*
+           RUTA
+
+           OSRM devuelve las coordenadas
+           como [lon, lat].
+
+           Leaflet necesita [lat, lon].
+        */
+
+        const routeCoordinates =
+            route.geometry.coordinates
+                .map(
+
+                    coordinate => [
+
+                        coordinate[1],
+
+                        coordinate[0]
+
+                    ]
+
+                );
+
+
+
+        routeLine =
+            L.polyline(
+
+                routeCoordinates,
+
+                {
+
+                    weight: 6,
+
+                    opacity: 0.85
+
+                }
+
+            )
+            .addTo(map);
+
+
+
+        /*
+           AJUSTAR MAPA
+
+           Para que aparezcan
+           ambos puntos y la ruta.
+        */
+
+        map.fitBounds(
+
+            routeLine.getBounds(),
+
+            {
+
+                padding:
+                    [30, 30]
+
+            }
+
+        );
+
+
+
+        /*
+           MOSTRAR RESULTADO
+        */
 
         document
             .getElementById(
@@ -1393,6 +1517,17 @@ async function calculateRoute() {
 
             distanceKm.toFixed(2)
             + " km";
+
+
+
+        document
+            .getElementById(
+                "timeResult"
+            )
+            .textContent =
+
+            timeMinutes
+            + " min aprox.";
 
 
 
@@ -1410,7 +1545,8 @@ async function calculateRoute() {
 
 
 
-        result.style.display = "block";
+        result.style.display =
+            "block";
 
 
     }
@@ -1422,7 +1558,7 @@ async function calculateRoute() {
 
             error.message ||
 
-            "Ocurrió un error calculando el domicilio."
+            "Ocurrió un error."
 
         );
 
@@ -1432,13 +1568,16 @@ async function calculateRoute() {
     finally {
 
 
-        button.disabled = false;
+        button.disabled =
+            false;
+
 
         button.textContent =
+            "🛵 CALCULAR DOMICILIO";
 
-            "CALCULAR DOMICILIO";
 
-        loading.style.display = "none";
+        loading.style.display =
+            "none";
 
     }
 
@@ -1446,16 +1585,64 @@ async function calculateRoute() {
 
 
 
-/*
-ESPERA
-*/
+/* =========================================
+   LIMPIAR MAPA
+========================================= */
+
+function clearMap() {
+
+
+    if (pickupMarker) {
+
+        map.removeLayer(
+            pickupMarker
+        );
+
+        pickupMarker = null;
+
+    }
+
+
+
+    if (dropoffMarker) {
+
+        map.removeLayer(
+            dropoffMarker
+        );
+
+        dropoffMarker = null;
+
+    }
+
+
+
+    if (routeLine) {
+
+        map.removeLayer(
+            routeLine
+        );
+
+        routeLine = null;
+
+    }
+
+}
+
+
+
+/* =========================================
+   ESPERAR
+========================================= */
 
 function sleep(ms) {
 
     return new Promise(
 
         resolve =>
-            setTimeout(resolve, ms)
+            setTimeout(
+                resolve,
+                ms
+            )
 
     );
 
@@ -1463,29 +1650,26 @@ function sleep(ms) {
 
 
 
-/*
-ERROR
-*/
+/* =========================================
+   ERROR
+========================================= */
 
 function showError(message) {
 
 
     const error =
-
         document
-            .getElementById(
-                "error"
-            );
-
+        .getElementById(
+            "error"
+        );
 
 
     error.textContent =
-
         "⚠️ " + message;
 
 
-
-    error.style.display = "block";
+    error.style.display =
+        "block";
 
 }
 
@@ -1498,21 +1682,16 @@ function hideError() {
         .getElementById(
             "error"
         )
-        .style.display = "none";
+        .style.display =
+        "none";
 
 }
 
 
 
-/*
-SOLICITAR PEDIDO
-
-POR AHORA SOLO MOSTRAMOS
-LA INFORMACIÓN.
-
-WHATSAPP LO CONECTAMOS
-EN LA SIGUIENTE VERSIÓN.
-*/
+/* =========================================
+   PEDIDO
+========================================= */
 
 function requestOrder() {
 
@@ -1545,7 +1724,15 @@ function requestOrder() {
         currentOrder.distance
             .toFixed(2) +
 
-        " km\n\n💰 Valor:\n" +
+        " km" +
+
+        "\n\n⏱️ Tiempo:\n" +
+
+        currentOrder.time +
+
+        " minutos" +
+
+        "\n\n💰 Valor:\n" +
 
         (
             currentOrder.price === null

@@ -92,6 +92,7 @@ async function abrirModalMisPedidos() {
       else if (p.estado === 'en_camino') badgeEstado = '<span style="color:#ff9900; font-weight:bold;">🚀 En Camino</span>';
       else if (p.estado === 'completado') badgeEstado = '<span style="color:#00ff88; font-weight:bold;">✅ Entregado</span>';
 
+      // Mostrar el nombre real del domiciliario si fue asignado
       const domNombre = p.nombreDomiciliario ? p.nombreDomiciliario : 'Buscando domiciliario...';
       const fechaFormat = new Date(p.created_at).toLocaleString('es-CO');
       const precioMostrar = p.precio === 0 ? 'Por definir por operador' : `$${Number(p.precio).toLocaleString('es-CO')} COP`;
@@ -222,7 +223,9 @@ function crearCardPedido(p, tipoEstado) {
 async function procesarCambioEstado(pedidoId, nuevoEstado) {
   try {
     await cambiarEstadoPedido(pedidoId, nuevoEstado, usuarioActual.id);
-    usuarioActual.profile.estado_servicio = nuevoEstado === 'aceptado' ? 'ocupado' : 'activo';
+    
+    // Mantener estado OCUPADO durante 'aceptado' y 'en_camino'. Volver a 'activo' únicamente en 'completado'
+    usuarioActual.profile.estado_servicio = (nuevoEstado === 'completado') ? 'activo' : 'ocupado';
     actualizarBotonEstadoServicio();
     await cargarListasPedidos();
     await actualizarCuadreDiario();
@@ -244,6 +247,7 @@ async function cargarVistaAdmin() {
   renderizarEstadosDomiciliariosAdmin();
   poblarSelectorDomiciliarios();
 
+  // Escuchar cambios de estado de usuarios en tiempo real en el Dashboard Admin
   escucharEstadoDomiciliarios(() => {
     cargarVistaAdmin();
   });
@@ -270,6 +274,7 @@ function renderizarEstadosDomiciliariosAdmin() {
 
 function poblarSelectorDomiciliarios() {
   const select = document.getElementById('selectFiltroDomiciliario');
+  const valorPrevio = select.value;
   select.innerHTML = '<option value="">-- Seleccionar Domiciliario --</option>';
 
   datosAdminGlobales.listaDomiciliarios.forEach(d => {
@@ -278,6 +283,8 @@ function poblarSelectorDomiciliarios() {
     opt.innerText = `${d.nombre} (@${d.username || 'user'})`;
     select.appendChild(opt);
   });
+
+  if (valorPrevio) select.value = valorPrevio;
 
   select.onchange = (e) => mostrarHistoricoDomiciliario(e.target.value);
 }

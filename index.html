@@ -27,7 +27,8 @@
     </div>
   </header>
 
-  <div class="container">
+  <!-- PANELES PRINCIPALES SEGÚN ROL -->
+  <div class="container" id="panelCliente">
     <div class="input-group">
       <label>📍 Barrio u Origen (Recogida en Tuluá):</label>
       <input type="text" id="origenInput" placeholder="Ej: Centro, San Luis, Salesiano">
@@ -47,6 +48,34 @@
       <h3>Tarifa: $<span id="precioTxt">0</span> COP</h3>
       <button class="btn btn-primary" id="btnHacerPedido">📦 Hacer Pedido</button>
     </div>
+  </div>
+
+  <!-- PANEL DOMICILIARIO -->
+  <div class="container" id="panelDomiciliario" style="display: none;">
+    <h2>🛵 Panel de Domiciliarios</h2>
+    <div style="background: #2a2a2a; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+      <p>💰 <strong>Cuadre Hoy:</strong> $<span id="cuadreDiarioTxt">0</span> COP</p>
+      <p>📦 <strong>Entregas Completadas:</strong> <span id="conteoEntregasTxt">0</span></p>
+    </div>
+
+    <h3 style="color: #00ff88; margin-bottom: 10px; font-size: 1rem;">🚨 Bolsa de Pedidos Pendientes</h3>
+    <div id="listaPedidosPendientes" style="margin-bottom: 20px;"><p style="color: #888;">Buscando pedidos...</p></div>
+
+    <h3 style="color: #00ff88; margin-bottom: 10px; font-size: 1rem;">📦 Mis Pedidos Activos</h3>
+    <div id="listaPedidosActivos"><p style="color: #888;">Sin pedidos activos en este momento.</p></div>
+  </div>
+
+  <!-- PANEL ADMINISTRADOR -->
+  <div class="container" id="panelAdmin" style="display: none;">
+    <h2>👑 Dashboard Administrador</h2>
+    <div style="background: #2a2a2a; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #333;">
+      <p>📊 <strong>Total Ventas Sistema:</strong> $<span id="adminTotalVentas">0</span> COP</p>
+      <p>📦 <strong>Total Pedidos Registrados:</strong> <span id="adminTotalPedidos">0</span></p>
+      <p>✅ <strong>Total Entregas Exitosas:</strong> <span id="adminTotalCompletados">0</span></p>
+    </div>
+
+    <h3 style="color: #00ff88; margin-top: 20px; font-size: 1rem;">🛵 Rendimiento por Domiciliario</h3>
+    <div id="listaRendimientoDomiciliarios" style="margin-top: 10px;"></div>
   </div>
 
   <!-- Modal Autenticación -->
@@ -147,6 +176,7 @@
   </div>
 
   <!-- Carga de librerías externas -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 

@@ -39,17 +39,21 @@ export async function obtenerCuadreDiarioDomiciliario(domiciliarioId) {
 export async function obtenerEstadisticasAdmin() {
   const inicioDia = obtenerInicioDiaColombiaISO();
 
-  // Consultar todos los usuarios para listar sus estados sin restricciones rígidas de rol
-  const { data: usuariosTotal } = await supabase
+  // 1. Consultar todos los usuarios para mostrar la lista en el Admin
+  const { data: usuariosTotal, error: errUsers } = await supabase
     .from('usuarios')
     .select('*')
     .order('nombre', { ascending: true });
 
+  if (errUsers) console.error("Error cargando usuarios admin:", errUsers);
+
+  // 2. Pedidos de hoy
   const { data: pedidosHoy } = await supabase
     .from('pedidos')
     .select('*')
     .gte('created_at', inicioDia);
 
+  // 3. Todos los pedidos históricos
   const { data: todosLosPedidos } = await supabase
     .from('pedidos')
     .select('*');

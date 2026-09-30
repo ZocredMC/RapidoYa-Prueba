@@ -90,6 +90,7 @@ async function abrirModalMisPedidos() {
       else if (p.estado === 'en_camino') badgeEstado = '<span style="color:#ff9900; font-weight:bold;">🚀 En Camino</span>';
       else if (p.estado === 'completado') badgeEstado = '<span style="color:#00ff88; font-weight:bold;">✅ Entregado</span>';
       else if (p.estado === 'cancelado') badgeEstado = '<span style="color:#ff5555; font-weight:bold;">❌ Cancelado / No Recibido</span>';
+      else badgeEstado = `<span style="color:#aaa; font-weight:bold;">${p.estado}</span>`;
 
       const domNombre = p.nombreDomiciliario ? p.nombreDomiciliario : 'Buscando domiciliario...';
       const fechaFormat = new Date(p.created_at).toLocaleString('es-CO');
@@ -268,7 +269,7 @@ function renderizarEstadosDomiciliariosAdmin() {
   cont.innerHTML = '';
 
   if (!datosAdminGlobales.listaDomiciliarios.length) {
-    cont.innerHTML = '<p style="color:#888;">No hay usuarios registrados aún.</p>';
+    cont.innerHTML = '<p style="color:#888;">No hay domiciliarios registrados aún.</p>';
     return;
   }
 
@@ -282,8 +283,7 @@ function renderizarEstadosDomiciliariosAdmin() {
     else if (est === 'ocupado') badge = '<span style="color:#ff9900; font-weight:bold;">🟠 En Carrera</span>';
     else badge = '<span style="color:#ff5555; font-weight:bold;">🔴 Fuera de Servicio</span>';
 
-    const rolTag = d.rol ? ` (${d.rol})` : '';
-    item.innerHTML = `<div><strong>${d.nombre}</strong> (@${d.username || 'user'})${rolTag}</div><div>${badge}</div>`;
+    item.innerHTML = `<div><strong>${d.nombre}</strong> (@${d.username || 'user'})</div><div>${badge}</div>`;
     cont.appendChild(item);
   });
 }

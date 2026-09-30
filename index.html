@@ -30,28 +30,26 @@
 
   <!-- PANEL CLIENTE -->
   <div class="container" id="panelCliente">
-    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-      <button class="btn btn-primary" id="btnModoMapa" style="flex:1;">🗺️ Cotizar por Mapa</button>
-      <button class="btn btn-secondary" id="btnModoManual" style="flex:1;">✍️ Barrio Nuevo / Manual</button>
-    </div>
-
     <div class="input-group">
-      <label>📍 Barrio u Origen (Recogida):</label>
+      <label>📍 Barrio u Origen (Recogida en Tuluá):</label>
       <input type="text" id="origenInput" placeholder="Ej: Centro, San Luis, Salesiano">
     </div>
 
     <div class="input-group">
-      <label>🏁 Barrio u Destino (Entrega):</label>
+      <label>🏁 Barrio u Destino (Entrega en Tuluá):</label>
       <input type="text" id="destinoInput" placeholder="Ej: Progresar, Victoria, El Príncipe">
     </div>
 
-    <button class="btn btn-primary" id="btnCalcular">🔍 Calcular Tarifa</button>
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+      <button class="btn btn-primary" id="btnCalcular" style="flex: 1;">🔍 Calcular Tarifa</button>
+      <button class="btn btn-secondary" id="btnCotizacionManual" style="flex: 1; background: #444;">📍 Barrio Nuevo / Cotizar Manual</button>
+    </div>
 
     <div id="map"></div>
 
-    <div class="result-box" id="resultBox">
-      <p id="distanciaCont">Distancia estimada: <span id="distanciaTxt">0</span> km</p>
-      <h3>Tarifa: <span id="precioTxt">$0 COP</span></h3>
+    <div class="result-box" id="resultBox" style="display: none;">
+      <p>Distancia estimada: <span id="distanciaTxt">0</span> km</p>
+      <h3>Tarifa: <span id="precioTxtContainer">$<span id="precioTxt">0</span> COP</span></h3>
       <button class="btn btn-primary" id="btnHacerPedido">📦 Hacer Pedido</button>
     </div>
   </div>
@@ -60,19 +58,18 @@
   <div class="container" id="panelDomiciliario" style="display: none;">
     <h2>🛵 Panel de Domiciliarios</h2>
     
-    <div style="background: #2a2a2a; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #444; display: flex; justify-content: space-between; align-items: center;">
+    <!-- SWITCH DE ESTADO -->
+    <div style="background: #222; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #444; display: flex; justify-content: space-between; align-items: center;">
       <div>
-        <p>💰 <strong>Cuadre Hoy (Desde 00:00):</strong> $<span id="cuadreDiarioTxt">0</span> COP</p>
-        <p>📦 <strong>Entregas Hoy:</strong> <span id="conteoEntregasTxt">0</span></p>
+        <span>Estado Actual: </span>
+        <strong id="txtEstadoServicio" style="color: #ff5555;">Fuera de Servicio</strong>
       </div>
-      <div>
-        <label style="font-size:0.8rem; color:#aaa; display:block; margin-bottom:4px;">Mi Estado:</label>
-        <select id="selectEstadoDomiciliario" style="background:#111; color:#fff; padding:6px; border-radius:4px; border:1px solid #00ff88; font-weight:bold;">
-          <option value="activo">🟢 Activo / Disponible</option>
-          <option value="ocupado">🟠 Ocupado en Carrera</option>
-          <option value="inactivo">🔴 Fuera de Servicio</option>
-        </select>
-      </div>
+      <button id="btnToggleServicio" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.85rem;">🟢 Ponerme En Servicio</button>
+    </div>
+
+    <div style="background: #2a2a2a; padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #444;">
+      <p>💰 <strong>Cuadre Hoy (Desde 00:00):</strong> $<span id="cuadreDiarioTxt">0</span> COP</p>
+      <p>📦 <strong>Entregas Hoy:</strong> <span id="conteoEntregasTxt">0</span></p>
     </div>
 
     <h3 style="color: #00ff88; margin-bottom: 10px; font-size: 1rem;">🚨 Bolsa de Pedidos Pendientes</h3>
@@ -85,21 +82,22 @@
   <!-- PANEL ADMINISTRADOR -->
   <div class="container" id="panelAdmin" style="display: none;">
     <h2>👑 Dashboard Administrador</h2>
-    
     <div style="background: #2a2a2a; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #333;">
-      <p>📊 <strong>Total Ventas Históricas:</strong> $<span id="adminTotalVentas">0</span> COP</p>
+      <p>📊 <strong>Total Ventas Hoy:</strong> $<span id="adminTotalVentas">0</span> COP</p>
       <p>📦 <strong>Total Pedidos Registrados:</strong> <span id="adminTotalPedidos">0</span></p>
-      <p>✅ <strong>Total Entregas Exitosas:</strong> <span id="adminTotalCompletados">0</span></p>
+      <p>✅ <strong>Entregas Exitosas Hoy:</strong> <span id="adminTotalCompletados">0</span></p>
     </div>
 
-    <h3 style="color: #00ff88; margin-top: 20px; font-size: 1rem;">🛵 Estado y Rendimiento de Domiciliarios</h3>
-    <div id="listaRendimientoDomiciliarios" style="margin-top: 10px;"></div>
+    <h3 style="color: #00ff88; margin-top: 20px; font-size: 1rem;">🟢 Estado de Domiciliarios en Tiempo Real</h3>
+    <div id="listaEstadoDomiciliarios" style="margin-top: 10px;"></div>
 
-    <h3 style="color: #00ff88; margin-top: 20px; font-size: 1rem;">🔍 Consultar Histórico por Domiciliario</h3>
-    <select id="selectFiltroDomiciliario" style="width: 100%; padding: 8px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; margin-bottom: 10px;">
-      <option value="">-- Selecciona un domiciliario --</option>
-    </select>
-    <div id="contenedorHistoricoDomiciliario"></div>
+    <h3 style="color: #00ff88; margin-top: 20px; font-size: 1rem;">📜 Histórico por Domiciliario</h3>
+    <div class="input-group">
+      <select id="selectFiltroDomiciliario" style="width: 100%; padding: 10px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px;">
+        <option value="">-- Seleccionar Domiciliario --</option>
+      </select>
+    </div>
+    <div id="contenedorHistoricoDomiciliario" style="margin-top: 10px;"></div>
   </div>
 
   <!-- MODAL MIS PEDIDOS CLIENTE -->
@@ -210,11 +208,9 @@
     </div>
   </div>
 
-  <!-- Carga de librerías externas -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- Script Controlador Principal -->
   <script type="module" src="js/app.js"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 import { supabase } from './config.js';
 
-// Crear un nuevo pedido
+// Crear un nuevo pedido (Soporta tarifa calculada o manual)
 export async function crearPedido(datosPedido) {
   const { data, error } = await supabase
     .from('pedidos')
@@ -11,7 +11,7 @@ export async function crearPedido(datosPedido) {
   return data;
 }
 
-// Escuchar cambios en tiempo real
+// Escuchar cambios en tiempo real en la tabla pedidos
 export function escucharNuevosPedidos(callback) {
   return supabase
     .channel('pedidos-channel')
@@ -25,7 +25,7 @@ export function escucharNuevosPedidos(callback) {
     .subscribe();
 }
 
-// Obtener pedidos pendientes
+// Obtener pedidos pendientes de asignación
 export async function obtenerPedidosPendientes() {
   const { data, error } = await supabase
     .from('pedidos')
@@ -37,7 +37,7 @@ export async function obtenerPedidosPendientes() {
   return data;
 }
 
-// Obtener pedidos activos de un domiciliario
+// Obtener pedidos activos tomados por un domiciliario
 export async function obtenerPedidosActivosDomiciliario(domiciliarioId) {
   const { data, error } = await supabase
     .from('pedidos')
@@ -50,11 +50,9 @@ export async function obtenerPedidosActivosDomiciliario(domiciliarioId) {
   return data;
 }
 
-// Cambiar estado del pedido y registrar asignación del domiciliario
+// Cambiar estado de pedido asignando el domiciliario desde la aceptación
 export async function cambiarEstadoPedido(pedidoId, nuevoEstado, domiciliarioId) {
-  const datosActualizacion = {
-    estado: nuevoEstado
-  };
+  const datosActualizacion = { estado: nuevoEstado };
 
   if (domiciliarioId) {
     datosActualizacion.domiciliario_id = domiciliarioId;
@@ -79,35 +77,29 @@ export async function cambiarEstadoPedido(pedidoId, nuevoEstado, domiciliarioId)
   return data;
 }
 
-// Obtener pedidos de un cliente asignando directamente los nombres reales de los domiciliarios
+// Obtener pedidos del cliente trayendo el nombre del domiciliario mediante la Foreign Key
 export async function obtenerPedidosCliente(clienteId) {
-  // 1. Traer los pedidos del cliente
-  const { data: pedidos, error } = await supabase
+  const { data, error } = await supabase
     .from('pedidos')
-    .select('*')
+    .select(`
+      *,
+      domiciliario:usuarios!fk_pedidos_domiciliario(nombre, username)
+    `)
     .eq('cliente_id', clienteId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  if (!pedidos || pedidos.length === 0) return [];
+  return data;
+}
 
-  // 2. Traer todos los usuarios que son domiciliarios o admins para mapear sus nombres
-  const { data: usuarios } = await supabase
+// Cambiar estado de disponibilidad del domiciliario
+export async function cambiarEstadoDisponibilidadDomiciliario(domiciliarioId, nuevoEstado) {
+  const { data, error } = await supabase
     .from('usuarios')
-    .select('id, nombre');
+    .update({ estado_servicio: nuevoEstado })
+    .eq('id', domiciliarioId)
+    .select();
 
-  const mapaUsuarios = {};
-  if (usuarios) {
-    usuarios.forEach(u => {
-      mapaUsuarios[u.id] = u.nombre;
-    });
-  }
-
-  // 3. Adjuntar el nombre real directamente
-  return pedidos.map(p => ({
-    ...p,
-    nombreDomiciliario: (p.domiciliario_id && mapaUsuarios[p.domiciliario_id]) 
-      ? mapaUsuarios[p.domiciliario_id] 
-      : null
-  }));
+  if (error) throw error;
+  return data;
 }

@@ -58,9 +58,7 @@ async function configurarVistaSegunRol(rol) {
     cargarVistaDomiciliario();
   } else if (rol === 'admin') {
     pAdmin.style.display = 'block';
-    pDom.style.display = 'block';
     cargarVistaAdmin();
-    cargarVistaDomiciliario();
   } else {
     pCliente.style.display = 'block';
   }
@@ -91,8 +89,8 @@ async function abrirModalMisPedidos() {
       else if (p.estado === 'aceptado') badgeEstado = '<span style="color:#00ccff; font-weight:bold;">🛵 Aceptado</span>';
       else if (p.estado === 'en_camino') badgeEstado = '<span style="color:#ff9900; font-weight:bold;">🚀 En Camino</span>';
       else if (p.estado === 'completado') badgeEstado = '<span style="color:#00ff88; font-weight:bold;">✅ Entregado</span>';
+      else if (p.estado === 'cancelado') badgeEstado = '<span style="color:#ff5555; font-weight:bold;">❌ No Recibido / Cancelado</span>';
 
-      // Mostrar el nombre real del domiciliario si fue asignado
       const domNombre = p.nombreDomiciliario ? p.nombreDomiciliario : 'Buscando domiciliario...';
       const fechaFormat = new Date(p.created_at).toLocaleString('es-CO');
       const precioMostrar = p.precio === 0 ? 'Por definir por operador' : `$${Number(p.precio).toLocaleString('es-CO')} COP`;
@@ -198,9 +196,15 @@ function crearCardPedido(p, tipoEstado) {
   if (tipoEstado === 'pendiente') {
     html += `<button class="btn btn-primary" style="margin-top: 8px;" id="btnAceptar_${p.id}">Aceptar Pedido</button>`;
   } else if (tipoEstado === 'aceptado') {
-    html += `<button class="btn btn-primary" style="margin-top: 8px;" id="btnEnCamino_${p.id}">Marcar En Camino</button>`;
+    html += `<div style="display:flex; gap:8px; margin-top:8px;">
+               <button class="btn btn-primary" style="flex:1;" id="btnEnCamino_${p.id}">Marcar En Camino</button>
+               <button class="btn btn-secondary" style="flex:1; background:#ff5555;" id="btnNoReciben_${p.id}">❌ No Reciben / Cancelar</button>
+             </div>`;
   } else if (tipoEstado === 'en_camino') {
-    html += `<button class="btn btn-whatsapp" style="margin-top: 8px;" id="btnCompletado_${p.id}">Confirmar Entrega y Cobro</button>`;
+    html += `<div style="display:flex; gap:8px; margin-top:8px;">
+               <button class="btn btn-whatsapp" style="flex:1;" id="btnCompletado_${p.id}">Confirmar Entrega y Cobro</button>
+               <button class="btn btn-secondary" style="flex:1; background:#ff5555;" id="btnNoReciben_${p.id}">❌ No Reciben / Cancelar</button>
+             </div>`;
   }
 
   card.innerHTML = html;
@@ -215,6 +219,9 @@ function crearCardPedido(p, tipoEstado) {
     if (document.getElementById(`btnCompletado_${p.id}`)) {
       document.getElementById(`btnCompletado_${p.id}`).onclick = () => procesarCambioEstado(p.id, 'completado');
     }
+    if (document.getElementById(`btnNoReciben_${p.id}`)) {
+      document.getElementById(`btnNoReciben_${p.id}`).onclick = () => procesarCambioEstado(p.id, 'cancelado');
+    }
   }, 100);
 
   return card;
@@ -224,8 +231,13 @@ async function procesarCambioEstado(pedidoId, nuevoEstado) {
   try {
     await cambiarEstadoPedido(pedidoId, nuevoEstado, usuarioActual.id);
     
-    // Mantener estado OCUPADO durante 'aceptado' y 'en_camino'. Volver a 'activo' únicamente en 'completado'
-    usuarioActual.profile.estado_servicio = (nuevoEstado === 'completado') ? 'activo' : 'ocupado';
+    // Mantener OCUPADO durante aceptado y en_camino. Solo pasa a ACTIVO en completado o cancelado
+    if (nuevoEstado === 'aceptado' || nuevoEstado === 'en_camino') {
+      usuarioActual.profile.estado_servicio = 'ocupado';
+    } else {
+      usuarioActual.profile.estado_servicio = 'activo';
+    }
+
     actualizarBotonEstadoServicio();
     await cargarListasPedidos();
     await actualizarCuadreDiario();
@@ -247,7 +259,6 @@ async function cargarVistaAdmin() {
   renderizarEstadosDomiciliariosAdmin();
   poblarSelectorDomiciliarios();
 
-  // Escuchar cambios de estado de usuarios en tiempo real en el Dashboard Admin
   escucharEstadoDomiciliarios(() => {
     cargarVistaAdmin();
   });
@@ -256,6 +267,11 @@ async function cargarVistaAdmin() {
 function renderizarEstadosDomiciliariosAdmin() {
   const cont = document.getElementById('listaEstadoDomiciliarios');
   cont.innerHTML = '';
+
+  if (!datosAdminGlobales.listaDomiciliarios.length) {
+    cont.innerHTML = '<p style="color:#888;">No hay domiciliarios registrados aún.</p>';
+    return;
+  }
 
   datosAdminGlobales.listaDomiciliarios.forEach(d => {
     const item = document.createElement('div');

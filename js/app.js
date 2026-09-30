@@ -242,15 +242,52 @@ function manejarPreguntaOModal() {
   }
 }
 
-window.abrirModalPedido = function() {
-  document.getElementById('barrioOrigenModal').value = datosCotizacionGlobal.origen;
-  document.getElementById('barrioDestinoModal').value = datosCotizacionGlobal.destino;
+// ---------------- VER MIS PEDIDOS (CLIENTE) ----------------
+async function abrirModalMisPedidos() {
+  if (!usuarioActual) return;
+  
+  document.getElementById('modalMisPedidos').style.display = 'flex';
+  const contList = document.getElementById('contenedorMisPedidosList');
+  contList.innerHTML = '<p style="color:#888;">Cargando pedidos...</p>';
 
-  if (usuarioActual && usuarioActual.profile) {
-    document.getElementById('clienteNombre').value = usuarioActual.profile.nombre || '';
-    document.getElementById('clienteTelefono').value = usuarioActual.profile.telefono || '';
-    document.getElementById('dirExactaOrigen').value = usuarioActual.profile.direccion || '';
+  try {
+    const pedidos = await obtenerPedidosCliente(usuarioActual.id);
+    if (!pedidos.length) {
+      contList.innerHTML = '<p style="color:#888;">Aún no has realizado pedidos.</p>';
+      return;
+    }
+
+    contList.innerHTML = '';
+    pedidos.forEach(p => {
+      const card = document.createElement('div');
+      card.style.cssText = "background: #2a2a2a; border: 1px solid #444; border-radius: 8px; padding: 12px; margin-bottom: 10px;";
+
+      let badgeEstado = '';
+      if (p.estado === 'pendiente') badgeEstado = '<span style="color:#ffcc00; font-weight:bold;">⏳ Pendiente</span>';
+      else if (p.estado === 'aceptado') badgeEstado = '<span style="color:#00ccff; font-weight:bold;">🛵 Aceptado</span>';
+      else if (p.estado === 'en_camino') badgeEstado = '<span style="color:#ff9900; font-weight:bold;">🚀 En Camino</span>';
+      else if (p.estado === 'completado') badgeEstado = '<span style="color:#00ff88; font-weight:bold;">✅ Entregado</span>';
+
+      // Mostrar únicamente el nombre real del domiciliario
+      const domNombre = (p.domiciliario && p.domiciliario.nombre) ? p.domiciliario.nombre : 'Buscando domiciliario...';
+      const fechaFormat = new Date(p.created_at).toLocaleString('es-CO');
+
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
+          <small style="color:#888;">${fechaFormat}</small>
+          <div>${badgeEstado}</div>
+        </div>
+        <p><strong>📍 Recogida:</strong> ${p.origen_barrio} (${p.origen_direccion})</p>
+        <p><strong>🏁 Entrega:</strong> ${p.destino_barrio} (${p.destino_direccion})</p>
+        <p><strong>💰 Tarifa:</strong> $${Number(p.precio).toLocaleString('es-CO')} COP</p>
+        <p><strong>🛵 Domiciliario Asignado:</strong> ${domNombre}</p>
+      `;
+      contList.appendChild(card);
+    });
+  } catch (err) {
+    contList.innerHTML = `<p style="color:#ff5555;">Error al cargar pedidos: ${err.message}</p>`;
   }
+}
 
   document.getElementById('modalPedido').style.display = 'flex';
 };

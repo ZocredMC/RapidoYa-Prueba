@@ -11,7 +11,7 @@ export async function crearPedido(datosPedido) {
   return data;
 }
 
-// Escuchar pedidos en tiempo real
+// Escuchar cambios en tiempo real de la tabla pedidos
 export function escucharNuevosPedidos(callback) {
   return supabase
     .channel('pedidos-realtime-channel')
@@ -21,11 +21,11 @@ export function escucharNuevosPedidos(callback) {
     .subscribe();
 }
 
-// Escuchar cambios de estado en tiempo real (usuarios)
+// Escuchar cambios en tiempo real de la tabla usuarios
 export function escucharEstadoDomiciliarios(callback) {
   return supabase
     .channel('usuarios-realtime-channel')
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'usuarios' }, (payload) => {
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios' }, (payload) => {
       callback(payload);
     })
     .subscribe();
@@ -43,7 +43,7 @@ export async function obtenerPedidosPendientes() {
   return data;
 }
 
-// Obtener pedidos activos
+// Obtener pedidos activos de un domiciliario
 export async function obtenerPedidosActivosDomiciliario(domiciliarioId) {
   const { data, error } = await supabase
     .from('pedidos')
@@ -56,7 +56,7 @@ export async function obtenerPedidosActivosDomiciliario(domiciliarioId) {
   return data;
 }
 
-// Cambiar estado de pedido (Aceptado, En Camino, Completado, Cancelado)
+// Cambiar estado del pedido y asegurar estado OCUPADO durante toda la entrega
 export async function cambiarEstadoPedido(pedidoId, nuevoEstado, domiciliarioId) {
   const datosActualizacion = { estado: nuevoEstado };
   const ahora = new Date().toISOString();
@@ -67,7 +67,7 @@ export async function cambiarEstadoPedido(pedidoId, nuevoEstado, domiciliarioId)
     await cambiarEstadoServicioDomiciliario(domiciliarioId, 'ocupado');
   } else if (nuevoEstado === 'en_camino') {
     datosActualizacion.fecha_en_camino = ahora;
-    // Mantiene estrictamente el estado OCUPADO
+    // Mantiene obligatoriamente el estado OCUPADO
     await cambiarEstadoServicioDomiciliario(domiciliarioId, 'ocupado');
   } else if (nuevoEstado === 'completado') {
     datosActualizacion.fecha_completado = ahora;
@@ -87,7 +87,7 @@ export async function cambiarEstadoPedido(pedidoId, nuevoEstado, domiciliarioId)
   return data;
 }
 
-// Cambiar el estado del servicio del domiciliario
+// Cambiar estado de servicio del domiciliario
 export async function cambiarEstadoServicioDomiciliario(domiciliarioId, estadoServicio) {
   const { data, error } = await supabase
     .from('usuarios')
@@ -98,7 +98,7 @@ export async function cambiarEstadoServicioDomiciliario(domiciliarioId, estadoSe
   return data;
 }
 
-// Obtener pedidos del cliente con mapeo de nombres de domiciliario
+// Obtener historial de pedidos del cliente
 export async function obtenerPedidosCliente(clienteId) {
   const { data: pedidos, error } = await supabase
     .from('pedidos')

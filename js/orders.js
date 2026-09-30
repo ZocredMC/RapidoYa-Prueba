@@ -21,7 +21,7 @@ export function escucharNuevosPedidos(callback) {
     .subscribe();
 }
 
-// Escuchar cambios en tiempo real de la tabla usuarios
+// Escuchar cambios de la tabla usuarios en tiempo real
 export function escucharEstadoDomiciliarios(callback) {
   return supabase
     .channel('usuarios-realtime-channel')

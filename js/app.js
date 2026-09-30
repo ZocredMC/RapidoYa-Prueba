@@ -259,8 +259,11 @@ async function cargarVistaAdmin() {
   renderizarEstadosDomiciliariosAdmin();
   poblarSelectorDomiciliarios();
 
-  escucharEstadoDomiciliarios(() => {
-    cargarVistaAdmin();
+  // Escuchar cualquier actualización de usuarios en tiempo real y refrescar la UI de inmediato
+  escucharEstadoDomiciliarios(async () => {
+    datosAdminGlobales = await obtenerEstadisticasAdmin();
+    renderizarEstadosDomiciliariosAdmin();
+    poblarSelectorDomiciliarios();
   });
 }
 

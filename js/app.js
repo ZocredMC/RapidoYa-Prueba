@@ -83,11 +83,18 @@ async function abrirModalMisPedidos() {
       else if (p.estado === 'en_camino') badgeEstado = '<span style="color:#ff9900; font-weight:bold;">🚀 En Camino</span>';
       else if (p.estado === 'completado') badgeEstado = '<span style="color:#00ff88; font-weight:bold;">✅ Entregado</span>';
 
-      const domNombre = p.domiciliario ? `@${p.domiciliario.username}` : 'Buscando domiciliario...';
+      // Lee el nombre procesado o la propiedad asignada
+      let domNombre = 'Buscando domiciliario...';
+      if (p.nombreDomiciliario) {
+        domNombre = p.nombreDomiciliario;
+      } else if (p.domiciliario) {
+        domNombre = typeof p.domiciliario === 'object' ? (p.domiciliario.nombre || `@${p.domiciliario.username}`) : p.domiciliario;
+      }
+
       const fechaFormat = new Date(p.created_at).toLocaleString('es-CO');
 
       card.innerHTML = `
-        <div style="display:flex; justify-between; align-items:center; margin-bottom: 5px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
           <small style="color:#888;">${fechaFormat}</small>
           <div>${badgeEstado}</div>
         </div>

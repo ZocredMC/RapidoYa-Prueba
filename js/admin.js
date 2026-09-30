@@ -39,11 +39,11 @@ export async function obtenerCuadreDiarioDomiciliario(domiciliarioId) {
 export async function obtenerEstadisticasAdmin() {
   const inicioDia = obtenerInicioDiaColombiaISO();
 
-  // Filtrar ÚNICAMENTE usuarios con rol 'domiciliario'
+  // Trae los repartidores (domiciliario o admin)
   const { data: domiciliarios } = await supabase
     .from('usuarios')
     .select('*')
-    .eq('rol', 'domiciliario');
+    .in('rol', ['domiciliario', 'admin']);
 
   const { data: pedidosHoy } = await supabase
     .from('pedidos')

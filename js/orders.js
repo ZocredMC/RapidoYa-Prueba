@@ -85,3 +85,15 @@ export async function obtenerPedidosActivosDomiciliario(domiciliarioId) {
   if (error) throw error;
   return data;
 }
+
+// Obtener historial de pedidos de un cliente
+export async function obtenerPedidosCliente(clienteId) {
+  const { data, error } = await supabase
+    .from('pedidos')
+    .select('*, domiciliario:usuarios!pedidos_domiciliario_id_fkey(nombre, username)')
+    .eq('cliente_id', clienteId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+}

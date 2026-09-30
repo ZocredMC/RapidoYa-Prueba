@@ -1,6 +1,6 @@
 import { supabase } from './config.js';
 
-// Crear pedido (admite tarifa fija o manual)
+// Crear pedido
 export async function crearPedido(datosPedido) {
   const { data, error } = await supabase
     .from('pedidos')
@@ -11,7 +11,7 @@ export async function crearPedido(datosPedido) {
   return data;
 }
 
-// Escuchar cambios en tiempo real de la tabla pedidos
+// Escuchar pedidos en tiempo real
 export function escucharNuevosPedidos(callback) {
   return supabase
     .channel('pedidos-realtime-channel')
@@ -21,11 +21,11 @@ export function escucharNuevosPedidos(callback) {
     .subscribe();
 }
 
-// Escuchar cambios en tiempo real de la tabla usuarios (para estados del domiciliario)
+// Escuchar cambios de estado en tiempo real (usuarios)
 export function escucharEstadoDomiciliarios(callback) {
   return supabase
     .channel('usuarios-realtime-channel')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios' }, (payload) => {
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'usuarios' }, (payload) => {
       callback(payload);
     })
     .subscribe();
@@ -43,7 +43,7 @@ export async function obtenerPedidosPendientes() {
   return data;
 }
 
-// Obtener pedidos activos de un domiciliario
+// Obtener pedidos activos
 export async function obtenerPedidosActivosDomiciliario(domiciliarioId) {
   const { data, error } = await supabase
     .from('pedidos')
@@ -56,7 +56,7 @@ export async function obtenerPedidosActivosDomiciliario(domiciliarioId) {
   return data;
 }
 
-// Cambiar estado del pedido y gestionar estado de servicio del domiciliario
+// Cambiar estado de pedido (Aceptado, En Camino, Completado, Cancelado)
 export async function cambiarEstadoPedido(pedidoId, nuevoEstado, domiciliarioId) {
   const datosActualizacion = { estado: nuevoEstado };
   const ahora = new Date().toISOString();
@@ -64,15 +64,16 @@ export async function cambiarEstadoPedido(pedidoId, nuevoEstado, domiciliarioId)
   if (nuevoEstado === 'aceptado') {
     datosActualizacion.domiciliario_id = domiciliarioId;
     datosActualizacion.fecha_aceptado = ahora;
-    // Marcar domiciliario como OCUPADO
     await cambiarEstadoServicioDomiciliario(domiciliarioId, 'ocupado');
   } else if (nuevoEstado === 'en_camino') {
     datosActualizacion.fecha_en_camino = ahora;
-    // Mantiene el estado OCUPADO mientras realiza la entrega
+    // Mantiene estrictamente el estado OCUPADO
     await cambiarEstadoServicioDomiciliario(domiciliarioId, 'ocupado');
   } else if (nuevoEstado === 'completado') {
     datosActualizacion.fecha_completado = ahora;
-    // Al completar el pedido y recibir cobro, vuelve a estar ACTIVO
+    await cambiarEstadoServicioDomiciliario(domiciliarioId, 'activo');
+  } else if (nuevoEstado === 'cancelado') {
+    datosActualizacion.fecha_cancelado = ahora;
     await cambiarEstadoServicioDomiciliario(domiciliarioId, 'activo');
   }
 
@@ -86,7 +87,7 @@ export async function cambiarEstadoPedido(pedidoId, nuevoEstado, domiciliarioId)
   return data;
 }
 
-// Cambiar el estado del servicio del domiciliario (activo, fuera_de_servicio, ocupado)
+// Cambiar el estado del servicio del domiciliario
 export async function cambiarEstadoServicioDomiciliario(domiciliarioId, estadoServicio) {
   const { data, error } = await supabase
     .from('usuarios')
@@ -97,7 +98,7 @@ export async function cambiarEstadoServicioDomiciliario(domiciliarioId, estadoSe
   return data;
 }
 
-// Obtener historial de pedidos del cliente asociando el nombre real del domiciliario
+// Obtener pedidos del cliente con mapeo de nombres de domiciliario
 export async function obtenerPedidosCliente(clienteId) {
   const { data: pedidos, error } = await supabase
     .from('pedidos')
@@ -108,7 +109,6 @@ export async function obtenerPedidosCliente(clienteId) {
   if (error) throw error;
   if (!pedidos || pedidos.length === 0) return [];
 
-  // Mapear nombres de domiciliarios registrados
   const { data: usuarios } = await supabase.from('usuarios').select('id, nombre');
   const mapaNombres = {};
   if (usuarios) {

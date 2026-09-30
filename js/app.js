@@ -1,6 +1,8 @@
 import { obtenerUsuarioActual, registrarUsuario, iniciarSesion, cerrarSesion } from './auth.js';
 import { inicializarMapa, cotizarRuta, limpiarMapa } from './map.js';
 import { NUMERO_WHATSAPP } from './config.js';
+import { crearPedido, escucharNuevosPedidos, cambiarEstadoPedido, obtenerPedidosPendientes, obtenerPedidosActivosDomiciliario } from './orders.js';
+import { obtenerCuadreDiarioDomiciliario, obtenerEstadisticasAdmin } from './admin.js';
 
 let usuarioActual = null;
 let datosCotizacionGlobal = null;
@@ -19,14 +21,140 @@ async function verificarEstadoSesion() {
       document.getElementById('guestButtons').style.display = 'none';
       document.getElementById('userBadge').style.display = 'block';
       const displayTag = usuarioActual.profile.username ? `@${usuarioActual.profile.username}` : usuarioActual.profile.nombre;
-      document.getElementById('userNameTxt').innerText = `👋 ${displayTag}`;
+      document.getElementById('userNameTxt').innerText = `👋 ${displayTag} (${usuarioActual.profile.rol || 'cliente'})`;
+
+      // Renderizar vista según el ROL
+      configurarVistaSegunRol(usuarioActual.profile.rol);
     } else {
       document.getElementById('guestButtons').style.display = 'block';
       document.getElementById('userBadge').style.display = 'none';
+      configurarVistaSegunRol('cliente');
     }
   } catch (err) {
     console.error("Error al cargar sesión:", err);
   }
+}
+
+async function configurarVistaSegunRol(rol) {
+  const pCliente = document.getElementById('panelCliente');
+  const pDom = document.getElementById('panelDomiciliario');
+  const pAdmin = document.getElementById('panelAdmin');
+
+  pCliente.style.display = 'none';
+  pDom.style.display = 'none';
+  pAdmin.style.display = 'none';
+
+  if (rol === 'domiciliario') {
+    pDom.style.display = 'block';
+    cargarVistaDomiciliario();
+  } else if (rol === 'admin') {
+    pAdmin.style.display = 'block';
+    cargarVistaAdmin();
+  } else {
+    pCliente.style.display = 'block';
+  }
+}
+
+// ---------------- PANEL DOMICILIARIO ----------------
+async function cargarVistaDomiciliario() {
+  actualizarCuadreDiario();
+  cargarListasPedidos();
+
+  // Escuchar nuevos pedidos en tiempo real
+  escucharNuevosPedidos((pedido) => {
+    // Alerta sonora / recarga de listas
+    cargarListasPedidos();
+    actualizarCuadreDiario();
+  });
+}
+
+async function actualizarCuadreDiario() {
+  if (!usuarioActual) return;
+  const cuadre = await obtenerCuadreDiarioDomiciliario(usuarioActual.id);
+  document.getElementById('cuadreDiarioTxt').innerText = cuadre.totalRecaudado.toLocaleString('es-CO');
+  document.getElementById('conteoEntregasTxt').innerText = cuadre.totalViajes;
+}
+
+async function cargarListasPedidos() {
+  const pendientes = await obtenerPedidosPendientes();
+  const activos = await obtenerPedidosActivosDomiciliario(usuarioActual.id);
+
+  const contPendientes = document.getElementById('listaPedidosPendientes');
+  const contActivos = document.getElementById('listaPedidosActivos');
+
+  contPendientes.innerHTML = pendientes.length ? '' : '<p style="color: #888;">No hay pedidos pendientes en la ciudad.</p>';
+  pendientes.forEach(p => {
+    contPendientes.appendChild(crearCardPedido(p, 'pendiente'));
+  });
+
+  contActivos.innerHTML = activos.length ? '' : '<p style="color: #888;">Sin pedidos activos en este momento.</p>';
+  activos.forEach(p => {
+    contActivos.appendChild(crearCardPedido(p, p.estado));
+  });
+}
+
+function crearCardPedido(p, tipoEstado) {
+  const card = document.createElement('div');
+  card.style.cssText = "background: #2a2a2a; border: 1px solid #444; border-radius: 8px; padding: 12px; margin-bottom: 10px;";
+  
+  let html = `<p><strong>📍 Recoger:</strong> ${p.origen_barrio} (${p.origen_direccion})</p>
+              <p><strong>🏁 Entregar:</strong> ${p.destino_barrio} (${p.destino_direccion})</p>
+              <p><strong>💰 Tarifa:</strong> $${Number(p.precio).toLocaleString('es-CO')} COP (${p.distancia_km} km)</p>
+              <p><strong>👤 Cliente:</strong> ${p.cliente_nombre} - ${p.cliente_telefono}</p>
+              <p style="color:#aaa; font-size:0.8rem;">📝 ${p.observaciones || 'Sin detalles'}</p>`;
+
+  if (tipoEstado === 'pendiente') {
+    html += `<button class="btn btn-primary" style="margin-top: 8px;" id="btnAceptar_${p.id}">Aceptar Pedido</button>`;
+  } else if (tipoEstado === 'aceptado') {
+    html += `<button class="btn btn-primary" style="margin-top: 8px;" id="btnEnCamino_${p.id}">Marcar En Camino</button>`;
+  } else if (tipoEstado === 'en_camino') {
+    html += `<button class="btn btn-whatsapp" style="margin-top: 8px;" id="btnCompletado_${p.id}">Confirmar Entrega y Cobro</button>`;
+  }
+
+  card.innerHTML = html;
+
+  setTimeout(() => {
+    if (document.getElementById(`btnAceptar_${p.id}`)) {
+      document.getElementById(`btnAceptar_${p.id}`).onclick = () => procesarCambioEstado(p.id, 'aceptado');
+    }
+    if (document.getElementById(`btnEnCamino_${p.id}`)) {
+      document.getElementById(`btnEnCamino_${p.id}`).onclick = () => procesarCambioEstado(p.id, 'en_camino');
+    }
+    if (document.getElementById(`btnCompletado_${p.id}`)) {
+      document.getElementById(`btnCompletado_${p.id}`).onclick = () => procesarCambioEstado(p.id, 'completado');
+    }
+  }, 100);
+
+  return card;
+}
+
+async function procesarCambioEstado(pedidoId, nuevoEstado) {
+  try {
+    await cambiarEstadoPedido(pedidoId, nuevoEstado, usuarioActual.id);
+    await cargarListasPedidos();
+    await actualizarCuadreDiario();
+  } catch (err) {
+    alert("Error al actualizar el pedido: " + err.message);
+  }
+}
+
+// ---------------- PANEL ADMIN ----------------
+async function cargarVistaAdmin() {
+  const stats = await obtenerEstadisticasAdmin();
+  document.getElementById('adminTotalVentas').innerText = stats.totalVentas.toLocaleString('es-CO');
+  document.getElementById('adminTotalPedidos').innerText = stats.totalPedidos;
+  document.getElementById('adminTotalCompletados').innerText = stats.totalCompletados;
+
+  const contRendimiento = document.getElementById('listaRendimientoDomiciliarios');
+  contRendimiento.innerHTML = '';
+
+  stats.rendimientoDomiciliarios.forEach(d => {
+    const item = document.createElement('div');
+    item.style.cssText = "background: #2a2a2a; border-left: 4px solid #00ff88; padding: 10px; margin-bottom: 8px; border-radius: 4px;";
+    item.innerHTML = `<p><strong>${d.nombre}</strong></p>
+                      <p style="font-size:0.85rem; color:#ccc;">Viajes completados: ${d.viajes} | Recaudado: $${d.total.toLocaleString('es-CO')} COP</p>`;
+    contRendimiento.appendChild(item);
+  });
 }
 
 function vincularEventosUI() {
@@ -124,7 +252,7 @@ async function manejarSubmitAuth() {
   }
 }
 
-function enviarWhatsApp() {
+async function enviarWhatsApp() {
   const nombre = document.getElementById('clienteNombre').value.trim();
   const telefono = document.getElementById('clienteTelefono').value.trim();
   const dirOrigen = document.getElementById('dirExactaOrigen').value.trim();
@@ -136,28 +264,48 @@ function enviarWhatsApp() {
     return;
   }
 
-  const userTag = (usuarioActual && usuarioActual.profile && usuarioActual.profile.username)
-    ? ` (@${usuarioActual.profile.username})`
-    : '';
+  try {
+    // 1. Guardar pedido en Supabase
+    await crearPedido({
+      cliente_id: usuarioActual ? usuarioActual.id : null,
+      cliente_nombre: nombre,
+      cliente_telefono: telefono,
+      origen_barrio: datosCotizacionGlobal.origen,
+      origen_direccion: dirOrigen,
+      destino_barrio: datosCotizacionGlobal.destino,
+      destino_direccion: dirDestino,
+      distancia_km: datosCotizacionGlobal.distanciaKm,
+      precio: datosCotizacionGlobal.precio,
+      observaciones: obs,
+      estado: 'pendiente'
+    });
 
-  const mensajeTexto = `🚴‍♂ *¡NUEVO DOMICILIO - TULUÁ EXPRESS!*\n\n` +
-    `👤 *Cliente:* ${nombre}${userTag}\n` +
-    `📞 *Teléfono:* ${telefono}\n\n` +
-    `📍 *RECOGER EN:*\n` +
-    `• Barrio: ${datosCotizacionGlobal.origen}\n` +
-    `• Dirección Exacta: ${dirOrigen}\n\n` +
-    `🏁 *ENTREGAR EN:*\n` +
-    `• Barrio: ${datosCotizacionGlobal.destino}\n` +
-    `• Dirección Exacta: ${dirDestino}\n\n` +
-    `📏 *Distancia:* ${datosCotizacionGlobal.distanciaKm} km\n` +
-    `💰 *VALOR A COBRAR:* $${datosCotizacionGlobal.precio.toLocaleString('es-CO')} COP\n\n` +
-    `📝 *Observaciones:* ${obs}`;
+    // 2. Redirigir a WhatsApp
+    const userTag = (usuarioActual && usuarioActual.profile && usuarioActual.profile.username)
+      ? ` (@${usuarioActual.profile.username})`
+      : '';
 
-  const urlWhatsApp = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensajeTexto)}`;
-  
-  window.open(urlWhatsApp, '_blank');
-  window.cerrarModal('modalPedido');
-  reiniciarCotizador();
+    const mensajeTexto = `🚴‍♂ *¡NUEVO DOMICILIO - TULUÁ EXPRESS!*\n\n` +
+      `👤 *Cliente:* ${nombre}${userTag}\n` +
+      `📞 *Teléfono:* ${telefono}\n\n` +
+      `📍 *RECOGER EN:*\n` +
+      `• Barrio: ${datosCotizacionGlobal.origen}\n` +
+      `• Dirección Exacta: ${dirOrigen}\n\n` +
+      `🏁 *ENTREGAR EN:*\n` +
+      `• Barrio: ${datosCotizacionGlobal.destino}\n` +
+      `• Dirección Exacta: ${dirDestino}\n\n` +
+      `📏 *Distancia:* ${datosCotizacionGlobal.distanciaKm} km\n` +
+      `💰 *VALOR A COBRAR:* $${datosCotizacionGlobal.precio.toLocaleString('es-CO')} COP\n\n` +
+      `📝 *Observaciones:* ${obs}`;
+
+    const urlWhatsApp = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensajeTexto)}`;
+    
+    window.open(urlWhatsApp, '_blank');
+    window.cerrarModal('modalPedido');
+    reiniciarCotizador();
+  } catch (error) {
+    alert("Error al registrar el pedido: " + error.message);
+  }
 }
 
 function reiniciarCotizador() {
@@ -169,4 +317,4 @@ function reiniciarCotizador() {
   document.getElementById('resultBox').style.display = 'none';
   limpiarMapa();
   datosCotizacionGlobal = null;
-    }
+}

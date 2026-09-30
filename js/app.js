@@ -1,12 +1,22 @@
 import { obtenerUsuarioActual, registrarUsuario, iniciarSesion, cerrarSesion } from './auth.js';
 import { inicializarMapa, cotizarRuta, limpiarMapa } from './map.js';
 import { NUMERO_WHATSAPP } from './config.js';
-import { crearPedido, escucharNuevosPedidos, cambiarEstadoPedido, obtenerPedidosPendientes, obtenerPedidosActivosDomiciliario, obtenerPedidosCliente } from './orders.js';
+import { 
+  crearPedido, 
+  escucharNuevosPedidos, 
+  cambiarEstadoPedido, 
+  obtenerPedidosPendientes, 
+  obtenerPedidosActivosDomiciliario, 
+  obtenerPedidosCliente,
+  cambiarEstadoDisponibilidadDomiciliario
+} from './orders.js';
 import { obtenerCuadreDiarioDomiciliario, obtenerEstadisticasAdmin } from './admin.js';
 
 let usuarioActual = null;
 let datosCotizacionGlobal = null;
 let modoAuth = 'login';
+let esCotizacionManual = false;
+let datosAdminCache = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   inicializarMapa('map');
@@ -22,6 +32,10 @@ async function verificarEstadoSesion() {
       document.getElementById('userBadge').style.display = 'block';
       const displayTag = usuarioActual.profile.username ? `@${usuarioActual.profile.username}` : usuarioActual.profile.nombre;
       document.getElementById('userNameTxt').innerText = `👋 ${displayTag} (${usuarioActual.profile.rol || 'cliente'})`;
+
+      if (usuarioActual.profile.estado_servicio) {
+        document.getElementById('selectEstadoDomiciliario').value = usuarioActual.profile.estado_servicio;
+      }
 
       configurarVistaSegunRol(usuarioActual.profile.rol);
     } else {
@@ -47,13 +61,30 @@ async function configurarVistaSegunRol(rol) {
     pDom.style.display = 'block';
     cargarVistaDomiciliario();
   } else if (rol === 'admin') {
-    // El administrador tiene acceso tanto a las Estadísticas como al Panel de Domiciliarios
     pAdmin.style.display = 'block';
     pDom.style.display = 'block';
     cargarVistaAdmin();
     cargarVistaDomiciliario();
   } else {
     pCliente.style.display = 'block';
+  }
+}
+
+// ---------------- MODO MANUAL O MAPA ----------------
+function activarModoCotizacion(manual) {
+  esCotizacionManual = manual;
+  const mapaDiv = document.getElementById('map');
+  const distCont = document.getElementById('distanciaCont');
+
+  if (manual) {
+    mapaDiv.style.display = 'none';
+    distCont.style.display = 'none';
+    document.getElementById('precioTxt').innerText = "El operador te dará el valor";
+    document.getElementById('resultBox').style.display = 'block';
+  } else {
+    mapaDiv.style.display = 'block';
+    distCont.style.display = 'block';
+    document.getElementById('resultBox').style.display = 'none';
   }
 }
 
@@ -83,15 +114,9 @@ async function abrirModalMisPedidos() {
       else if (p.estado === 'en_camino') badgeEstado = '<span style="color:#ff9900; font-weight:bold;">🚀 En Camino</span>';
       else if (p.estado === 'completado') badgeEstado = '<span style="color:#00ff88; font-weight:bold;">✅ Entregado</span>';
 
-      // Lee el nombre procesado o la propiedad asignada
-      let domNombre = 'Buscando domiciliario...';
-      if (p.nombreDomiciliario) {
-        domNombre = p.nombreDomiciliario;
-      } else if (p.domiciliario) {
-        domNombre = typeof p.domiciliario === 'object' ? (p.domiciliario.nombre || `@${p.domiciliario.username}`) : p.domiciliario;
-      }
-
+      const domNombre = (p.domiciliario && p.domiciliario.nombre) ? p.domiciliario.nombre : 'Buscando domiciliario...';
       const fechaFormat = new Date(p.created_at).toLocaleString('es-CO');
+      const precioMostrar = p.precio === 0 ? "Por definir por el operador" : `$${Number(p.precio).toLocaleString('es-CO')} COP`;
 
       card.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
@@ -100,7 +125,7 @@ async function abrirModalMisPedidos() {
         </div>
         <p><strong>📍 Recogida:</strong> ${p.origen_barrio} (${p.origen_direccion})</p>
         <p><strong>🏁 Entrega:</strong> ${p.destino_barrio} (${p.destino_direccion})</p>
-        <p><strong>💰 Tarifa:</strong> $${Number(p.precio).toLocaleString('es-CO')} COP</p>
+        <p><strong>💰 Tarifa:</strong> ${precioMostrar}</p>
         <p><strong>🛵 Domiciliario Asignado:</strong> ${domNombre}</p>
       `;
       contList.appendChild(card);
@@ -150,9 +175,11 @@ function crearCardPedido(p, tipoEstado) {
   const card = document.createElement('div');
   card.style.cssText = "background: #2a2a2a; border: 1px solid #444; border-radius: 8px; padding: 12px; margin-bottom: 10px;";
   
+  const precioMostrar = p.precio === 0 ? "A convenir con operador" : `$${Number(p.precio).toLocaleString('es-CO')} COP`;
+
   let html = `<p><strong>📍 Recoger:</strong> ${p.origen_barrio} (${p.origen_direccion})</p>
               <p><strong>🏁 Entregar:</strong> ${p.destino_barrio} (${p.destino_direccion})</p>
-              <p><strong>💰 Tarifa:</strong> $${Number(p.precio).toLocaleString('es-CO')} COP (${p.distancia_km} km)</p>
+              <p><strong>💰 Tarifa:</strong> ${precioMostrar} (${p.distancia_km || 0} km)</p>
               <p><strong>👤 Cliente:</strong> ${p.cliente_nombre} - ${p.cliente_telefono}</p>
               <p style="color:#aaa; font-size:0.8rem;">📝 ${p.observaciones || 'Sin detalles'}</p>`;
 
@@ -191,22 +218,70 @@ async function procesarCambioEstado(pedidoId, nuevoEstado) {
   }
 }
 
-// ---------------- PANEL ADMIN ----------------
+// ---------------- PANEL ADMIN GLOBAL ----------------
 async function cargarVistaAdmin() {
-  const stats = await obtenerEstadisticasAdmin();
-  document.getElementById('adminTotalVentas').innerText = stats.totalVentas.toLocaleString('es-CO');
-  document.getElementById('adminTotalPedidos').innerText = stats.totalPedidos;
-  document.getElementById('adminTotalCompletados').innerText = stats.totalCompletados;
+  datosAdminCache = await obtenerEstadisticasAdmin();
+  document.getElementById('adminTotalVentas').innerText = datosAdminCache.totalVentas.toLocaleString('es-CO');
+  document.getElementById('adminTotalPedidos').innerText = datosAdminCache.totalPedidos;
+  document.getElementById('adminTotalCompletados').innerText = datosAdminCache.totalCompletados;
 
   const contRendimiento = document.getElementById('listaRendimientoDomiciliarios');
-  contRendimiento.innerHTML = '';
+  const selectFiltro = document.getElementById('selectFiltroDomiciliario');
 
-  stats.rendimientoDomiciliarios.forEach(d => {
+  contRendimiento.innerHTML = '';
+  selectFiltro.innerHTML = '<option value="">-- Selecciona un domiciliario --</option>';
+
+  datosAdminCache.rendimientoDomiciliarios.forEach(d => {
+    let badgeEstado = '🔴 Fuera de Servicio';
+    if (d.estadoServicio === 'activo') badgeEstado = '🟢 Activo';
+    else if (d.estadoServicio === 'ocupado') badgeEstado = '🟠 Ocupado';
+
     const item = document.createElement('div');
     item.style.cssText = "background: #2a2a2a; border-left: 4px solid #00ff88; padding: 10px; margin-bottom: 8px; border-radius: 4px;";
-    item.innerHTML = `<p><strong>${d.nombre}</strong></p>
-                      <p style="font-size:0.85rem; color:#ccc;">Viajes completados: ${d.viajes} | Recaudado: $${d.total.toLocaleString('es-CO')} COP</p>`;
+    item.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <p><strong>${d.nombre}</strong> (@${d.username || 'sin_user'})</p>
+        <span style="font-size:0.8rem; font-weight:bold;">${badgeEstado}</span>
+      </div>
+      <p style="font-size:0.85rem; color:#ccc; margin-top:5px;">
+        📅 <strong>Hoy:</strong> ${d.viajesHoy} viajes | $${d.recaudoHoy.toLocaleString('es-CO')} COP<br>
+        📈 <strong>Histórico Total:</strong> ${d.viajesHistorico} viajes | $${d.recaudoHistorico.toLocaleString('es-CO')} COP
+      </p>
+    `;
     contRendimiento.appendChild(item);
+
+    const opt = document.createElement('option');
+    opt.value = d.id;
+    opt.innerText = `${d.nombre} (${badgeEstado})`;
+    selectFiltro.appendChild(opt);
+  });
+}
+
+function filtrarHistoricoDomiciliario(domId) {
+  const cont = document.getElementById('contenedorHistoricoDomiciliario');
+  cont.innerHTML = '';
+
+  if (!domId || !datosAdminCache) return;
+
+  const dom = datosAdminCache.rendimientoDomiciliarios.find(d => d.id === domId);
+  if (!dom || !dom.historialPedidos.length) {
+    cont.innerHTML = '<p style="color:#888;">Este domiciliario no tiene entregas registradas.</p>';
+    return;
+  }
+
+  dom.historialPedidos.forEach(p => {
+    const card = document.createElement('div');
+    card.style.cssText = "background: #222; border: 1px solid #444; padding: 10px; margin-bottom: 8px; border-radius: 4px;";
+    
+    const fecha = new Date(p.created_at).toLocaleString('es-CO');
+    const precio = p.precio === 0 ? "Manual/Operador" : `$${Number(p.precio).toLocaleString('es-CO')} COP`;
+
+    card.innerHTML = `
+      <small style="color:#888;">${fecha} - Estado: ${p.estado}</small>
+      <p><strong>Origen:</strong> ${p.origen_barrio} | <strong>Destino:</strong> ${p.destino_barrio}</p>
+      <p><strong>Cobrado:</strong> ${precio} | <strong>Cliente:</strong> ${p.cliente_nombre}</p>
+    `;
+    cont.appendChild(card);
   });
 }
 
@@ -216,6 +291,23 @@ function vincularEventosUI() {
   document.getElementById('btnEnviarWhatsApp').addEventListener('click', enviarWhatsApp);
   document.getElementById('btnAuthSubmit').addEventListener('click', manejarSubmitAuth);
   document.getElementById('btnMisPedidosCliente')?.addEventListener('click', abrirModalMisPedidos);
+  
+  document.getElementById('btnModoMapa').addEventListener('click', () => activarModoCotizacion(false));
+  document.getElementById('btnModoManual').addEventListener('click', () => activarModoCotizacion(true));
+
+  document.getElementById('selectEstadoDomiciliario')?.addEventListener('change', async (e) => {
+    if (!usuarioActual) return;
+    try {
+      await cambiarEstadoDisponibilidadDomiciliario(usuarioActual.id, e.target.value);
+    } catch (err) {
+      alert("Error al actualizar disponibilidad: " + err.message);
+    }
+  });
+
+  document.getElementById('selectFiltroDomiciliario')?.addEventListener('change', (e) => {
+    filtrarHistoricoDomiciliario(e.target.value);
+  });
+
   document.getElementById('btnCerrarSesion')?.addEventListener('click', async () => {
     await cerrarSesion();
     location.reload();
@@ -231,10 +323,17 @@ async function manejarCotizacion() {
     return;
   }
 
+  if (esCotizacionManual) {
+    datosCotizacionGlobal = { origen, destino, distanciaKm: 0, precio: 0 };
+    document.getElementById('precioTxt').innerText = "El operador te dará el valor";
+    document.getElementById('resultBox').style.display = 'block';
+    return;
+  }
+
   try {
     datosCotizacionGlobal = await cotizarRuta(origen, destino);
     document.getElementById('distanciaTxt').innerText = datosCotizacionGlobal.distanciaKm;
-    document.getElementById('precioTxt').innerText = datosCotizacionGlobal.precio.toLocaleString('es-CO');
+    document.getElementById('precioTxt').innerText = `$${datosCotizacionGlobal.precio.toLocaleString('es-CO')} COP`;
     document.getElementById('resultBox').style.display = 'block';
   } catch (error) {
     alert(error.message);
@@ -250,8 +349,11 @@ function manejarPreguntaOModal() {
 }
 
 window.abrirModalPedido = function() {
-  document.getElementById('barrioOrigenModal').value = datosCotizacionGlobal.origen;
-  document.getElementById('barrioDestinoModal').value = datosCotizacionGlobal.destino;
+  const origen = document.getElementById('origenInput').value.trim();
+  const destino = document.getElementById('destinoInput').value.trim();
+
+  document.getElementById('barrioOrigenModal').value = datosCotizacionGlobal ? datosCotizacionGlobal.origen : origen;
+  document.getElementById('barrioDestinoModal').value = datosCotizacionGlobal ? datosCotizacionGlobal.destino : destino;
 
   if (usuarioActual && usuarioActual.profile) {
     document.getElementById('clienteNombre').value = usuarioActual.profile.nombre || '';
@@ -313,6 +415,11 @@ async function enviarWhatsApp() {
   const dirDestino = document.getElementById('dirExactaDestino').value.trim();
   const obs = document.getElementById('observacionesInput').value.trim() || "Sin observaciones";
 
+  const origen = datosCotizacionGlobal ? datosCotizacionGlobal.origen : document.getElementById('origenInput').value.trim();
+  const destino = datosCotizacionGlobal ? datosCotizacionGlobal.destino : document.getElementById('destinoInput').value.trim();
+  const precio = datosCotizacionGlobal ? datosCotizacionGlobal.precio : 0;
+  const distancia = datosCotizacionGlobal ? datosCotizacionGlobal.distanciaKm : 0;
+
   if (!nombre || !telefono || !dirOrigen || !dirDestino) {
     alert("Por favor completa tu nombre, teléfono y las direcciones exactas.");
     return;
@@ -323,12 +430,12 @@ async function enviarWhatsApp() {
       cliente_id: usuarioActual ? usuarioActual.id : null,
       cliente_nombre: nombre,
       cliente_telefono: telefono,
-      origen_barrio: datosCotizacionGlobal.origen,
+      origen_barrio: origen,
       origen_direccion: dirOrigen,
-      destino_barrio: datosCotizacionGlobal.destino,
+      destino_barrio: destino,
       destino_direccion: dirDestino,
-      distancia_km: datosCotizacionGlobal.distanciaKm,
-      precio: datosCotizacionGlobal.precio,
+      distancia_km: distancia,
+      precio: precio,
       observaciones: obs,
       estado: 'pendiente'
     });
@@ -337,17 +444,19 @@ async function enviarWhatsApp() {
       ? ` (@${usuarioActual.profile.username})`
       : '';
 
+    const precioTexto = precio === 0 ? "Por definir por operador" : `$${precio.toLocaleString('es-CO')} COP`;
+
     const mensajeTexto = `🚴‍♂ *¡NUEVO DOMICILIO - TULUÁ EXPRESS!*\n\n` +
       `👤 *Cliente:* ${nombre}${userTag}\n` +
       `📞 *Teléfono:* ${telefono}\n\n` +
       `📍 *RECOGER EN:*\n` +
-      `• Barrio: ${datosCotizacionGlobal.origen}\n` +
+      `• Barrio: ${origen}\n` +
       `• Dirección Exacta: ${dirOrigen}\n\n` +
       `🏁 *ENTREGAR EN:*\n` +
-      `• Barrio: ${datosCotizacionGlobal.destino}\n` +
+      `• Barrio: ${destino}\n` +
       `• Dirección Exacta: ${dirDestino}\n\n` +
-      `📏 *Distancia:* ${datosCotizacionGlobal.distanciaKm} km\n` +
-      `💰 *VALOR A COBRAR:* $${datosCotizacionGlobal.precio.toLocaleString('es-CO')} COP\n\n` +
+      `📏 *Distancia:* ${distancia} km\n` +
+      `💰 *VALOR A COBRAR:* ${precioTexto}\n\n` +
       `📝 *Observaciones:* ${obs}`;
 
     const urlWhatsApp = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensajeTexto)}`;
@@ -369,4 +478,5 @@ function reiniciarCotizador() {
   document.getElementById('resultBox').style.display = 'none';
   limpiarMapa();
   datosCotizacionGlobal = null;
+  activarModoCotizacion(false);
 }

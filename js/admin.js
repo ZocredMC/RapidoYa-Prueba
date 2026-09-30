@@ -39,22 +39,25 @@ export async function obtenerCuadreDiarioDomiciliario(domiciliarioId) {
 export async function obtenerEstadisticasAdmin() {
   const inicioDia = obtenerInicioDiaColombiaISO();
 
-  // 1. Consultar ÚNICAMENTE usuarios con rol 'domiciliario'
-  const { data: domiciliariosSolo, error: errUsers } = await supabase
+  // Consultar usuarios EXCLUYENDO estrictamente a los que tienen rol 'cliente'
+  const { data: usuariosTotal, error: errUsers } = await supabase
     .from('usuarios')
     .select('*')
-    .eq('rol', 'domiciliario')
+    .neq('rol', 'cliente')
     .order('nombre', { ascending: true });
 
-  if (errUsers) console.error("Error cargando domiciliarios admin:", errUsers);
+  if (errUsers) console.error("Error cargando personal operativo:", errUsers);
 
-  // 2. Pedidos de hoy
+  // Si por alguna razón el filtro estricto excluye al admin principal y quieres que aparezca, 
+  // o si prefieres asegurar que solo salgan domiciliarios, puedes ajustar la condición.
+  // Aquí filtramos todo lo que NO sea cliente ('domiciliario' o 'admin').
+  const personalOperativo = usuariosTotal ? usuariosTotal.filter(u => u.rol !== 'cliente') : [];
+
   const { data: pedidosHoy } = await supabase
     .from('pedidos')
     .select('*')
     .gte('created_at', inicioDia);
 
-  // 3. Todos los pedidos históricos
   const { data: todosLosPedidos } = await supabase
     .from('pedidos')
     .select('*');
@@ -75,7 +78,7 @@ export async function obtenerEstadisticasAdmin() {
     totalVentas: totalVentasHoy,
     totalPedidos: todosLosPedidos ? todosLosPedidos.length : 0,
     totalCompletados: totalCompletadosHoy,
-    listaDomiciliarios: domiciliariosSolo || [],
+    listaDomiciliarios: personalOperativo,
     todosLosPedidos: todosLosPedidos || []
   };
 }

@@ -11,7 +11,7 @@ export async function crearPedido(datosPedido) {
   return data;
 }
 
-// Escuchar cambios en tiempo real en la tabla pedidos
+// Escuchar cambios en tiempo real
 export function escucharNuevosPedidos(callback) {
   return supabase
     .channel('pedidos-channel')
@@ -25,7 +25,7 @@ export function escucharNuevosPedidos(callback) {
     .subscribe();
 }
 
-// Obtener pedidos pendientes de asignación
+// Obtener pedidos pendientes
 export async function obtenerPedidosPendientes() {
   const { data, error } = await supabase
     .from('pedidos')
@@ -37,7 +37,7 @@ export async function obtenerPedidosPendientes() {
   return data;
 }
 
-// Obtener pedidos activos tomados por un domiciliario
+// Obtener pedidos activos de un domiciliario
 export async function obtenerPedidosActivosDomiciliario(domiciliarioId) {
   const { data, error } = await supabase
     .from('pedidos')
@@ -50,18 +50,16 @@ export async function obtenerPedidosActivosDomiciliario(domiciliarioId) {
   return data;
 }
 
-// Cambiar el estado de un pedido y registrar el domiciliario que lo aceptó
+// Cambiar estado del pedido y registrar asignación del domiciliario
 export async function cambiarEstadoPedido(pedidoId, nuevoEstado, domiciliarioId) {
   const datosActualizacion = {
     estado: nuevoEstado
   };
 
-  // Se asigna el ID del domiciliario desde el momento en que interactúa
   if (domiciliarioId) {
     datosActualizacion.domiciliario_id = domiciliarioId;
   }
 
-  // Marcar fechas de cambio de estado
   const ahora = new Date().toISOString();
   if (nuevoEstado === 'aceptado') {
     datosActualizacion.fecha_aceptado = ahora;
@@ -81,9 +79,9 @@ export async function cambiarEstadoPedido(pedidoId, nuevoEstado, domiciliarioId)
   return data;
 }
 
-// Obtener historial de pedidos del cliente mostrando su nombre real
+// Obtener pedidos de un cliente asignando directamente los nombres reales de los domiciliarios
 export async function obtenerPedidosCliente(clienteId) {
-  // 1. Obtener pedidos del cliente
+  // 1. Traer los pedidos del cliente
   const { data: pedidos, error } = await supabase
     .from('pedidos')
     .select('*')
@@ -93,26 +91,23 @@ export async function obtenerPedidosCliente(clienteId) {
   if (error) throw error;
   if (!pedidos || pedidos.length === 0) return [];
 
-  // 2. Extraer los IDs de domiciliarios
-  const domiciliariosIds = [...new Set(pedidos.map(p => p.domiciliario_id).filter(Boolean))];
+  // 2. Traer todos los usuarios que son domiciliarios o admins para mapear sus nombres
+  const { data: usuarios } = await supabase
+    .from('usuarios')
+    .select('id, nombre');
 
-  if (domiciliariosIds.length > 0) {
-    // 3. Consultar el nombre real en la tabla usuarios
-    const { data: usuarios } = await supabase
-      .from('usuarios')
-      .select('id, nombre')
-      .in('id', domiciliariosIds);
-
-    if (usuarios) {
-      const mapaUsuarios = {};
-      usuarios.forEach(u => { mapaUsuarios[u.id] = u; });
-
-      return pedidos.map(p => ({
-        ...p,
-        domiciliario: p.domiciliario_id ? mapaUsuarios[p.domiciliario_id] : null
-      }));
-    }
+  const mapaUsuarios = {};
+  if (usuarios) {
+    usuarios.forEach(u => {
+      mapaUsuarios[u.id] = u.nombre;
+    });
   }
 
-  return pedidos;
+  // 3. Adjuntar el nombre real directamente
+  return pedidos.map(p => ({
+    ...p,
+    nombreDomiciliario: (p.domiciliario_id && mapaUsuarios[p.domiciliario_id]) 
+      ? mapaUsuarios[p.domiciliario_id] 
+      : null
+  }));
 }

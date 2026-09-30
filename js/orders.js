@@ -11,20 +11,20 @@ export async function crearPedido(datosPedido) {
   return data;
 }
 
-// Escuchar eventos en tiempo real
+// Escuchar cambios en tiempo real de la tabla pedidos
 export function escucharNuevosPedidos(callback) {
   return supabase
-    .channel('pedidos-realtime')
+    .channel('pedidos-realtime-channel')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, (payload) => {
       callback(payload);
     })
     .subscribe();
 }
 
-// Escuchar cambios de estado de domiciliarios
+// Escuchar cambios en tiempo real de la tabla usuarios (para estados del domiciliario)
 export function escucharEstadoDomiciliarios(callback) {
   return supabase
-    .channel('usuarios-realtime')
+    .channel('usuarios-realtime-channel')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios' }, (payload) => {
       callback(payload);
     })
@@ -56,7 +56,7 @@ export async function obtenerPedidosActivosDomiciliario(domiciliarioId) {
   return data;
 }
 
-// Cambiar estado de pedido y actualizar estado del domiciliario (Ocupado/Activo)
+// Cambiar estado del pedido y gestionar estado de servicio del domiciliario
 export async function cambiarEstadoPedido(pedidoId, nuevoEstado, domiciliarioId) {
   const datosActualizacion = { estado: nuevoEstado };
   const ahora = new Date().toISOString();
@@ -68,13 +68,12 @@ export async function cambiarEstadoPedido(pedidoId, nuevoEstado, domiciliarioId)
     await cambiarEstadoServicioDomiciliario(domiciliarioId, 'ocupado');
   } else if (nuevoEstado === 'en_camino') {
     datosActualizacion.fecha_en_camino = ahora;
+    // Mantiene el estado OCUPADO mientras realiza la entrega
+    await cambiarEstadoServicioDomiciliario(domiciliarioId, 'ocupado');
   } else if (nuevoEstado === 'completado') {
     datosActualizacion.fecha_completado = ahora;
-    // Al completar, si no tiene más pedidos activos, vuelve a ACTIVO
-    const activos = await obtenerPedidosActivosDomiciliario(domiciliarioId);
-    if (activos.length <= 1) {
-      await cambiarEstadoServicioDomiciliario(domiciliarioId, 'activo');
-    }
+    // Al completar el pedido y recibir cobro, vuelve a estar ACTIVO
+    await cambiarEstadoServicioDomiciliario(domiciliarioId, 'activo');
   }
 
   const { data, error } = await supabase
@@ -98,7 +97,7 @@ export async function cambiarEstadoServicioDomiciliario(domiciliarioId, estadoSe
   return data;
 }
 
-// Obtener historial de pedidos del cliente trayendo el nombre del domiciliario
+// Obtener historial de pedidos del cliente asociando el nombre real del domiciliario
 export async function obtenerPedidosCliente(clienteId) {
   const { data: pedidos, error } = await supabase
     .from('pedidos')
@@ -109,7 +108,7 @@ export async function obtenerPedidosCliente(clienteId) {
   if (error) throw error;
   if (!pedidos || pedidos.length === 0) return [];
 
-  // Mapear nombres de domiciliarios
+  // Mapear nombres de domiciliarios registrados
   const { data: usuarios } = await supabase.from('usuarios').select('id, nombre');
   const mapaNombres = {};
   if (usuarios) {

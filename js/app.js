@@ -113,15 +113,50 @@ async function abrirModalMisPedidos() {
   }
 }
 
-// ---------------- PANEL DOMICILIARIO ----------------
-async function cargarVistaDomiciliario() {
-  actualizarCuadreDiario();
-  cargarListasPedidos();
-  actualizarBotonEstadoServicio();
+// ---------------- PANEL ADMIN ----------------
+let datosAdminGlobales = null;
 
-  escucharNuevosPedidos(() => {
-    cargarListasPedidos();
-    actualizarCuadreDiario();
+async function cargarVistaAdmin() {
+  datosAdminGlobales = await obtenerEstadisticasAdmin();
+  
+  document.getElementById('adminTotalVentas').innerText = datosAdminGlobales.totalVentas.toLocaleString('es-CO');
+  document.getElementById('adminTotalPedidos').innerText = datosAdminGlobales.totalPedidos;
+  document.getElementById('adminTotalCompletados').innerText = datosAdminGlobales.totalCompletados;
+
+  renderizarEstadosDomiciliariosAdmin();
+  poblarSelectorDomiciliarios();
+
+  // Listener en tiempo real optimizado para reflejar cambios de estado sin recargar la página
+  escucharEstadoDomiciliarios(async (payload) => {
+    // Actualizar los datos globales de manera inmediata cuando ocurra un cambio en usuarios
+    datosAdminGlobales = await obtenerEstadisticasAdmin();
+    renderizarEstadosDomiciliariosAdmin();
+    poblarSelectorDomiciliarios();
+  });
+}
+
+function renderizarEstadosDomiciliariosAdmin() {
+  const cont = document.getElementById('listaEstadoDomiciliarios');
+  cont.innerHTML = '';
+
+  if (!datosAdminGlobales || !datosAdminGlobales.listaDomiciliarios.length) {
+    cont.innerHTML = '<p style="color:#888;">No hay personal operativo registrado.</p>';
+    return;
+  }
+
+  datosAdminGlobales.listaDomiciliarios.forEach(d => {
+    const item = document.createElement('div');
+    item.style.cssText = "background: #2a2a2a; padding: 10px; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #444;";
+
+    let badge = '';
+    const est = d.estado_servicio || 'fuera_de_servicio';
+    if (est === 'activo') badge = '<span style="color:#00ff88; font-weight:bold;">🟢 En Servicio</span>';
+    else if (est === 'ocupado') badge = '<span style="color:#ff9900; font-weight:bold;">🟠 En Carrera</span>';
+    else badge = '<span style="color:#ff5555; font-weight:bold;">🔴 Fuera de Servicio</span>';
+
+    const rolBadge = d.rol ? ` <span style="font-size:0.75rem; color:#888;">(${d.rol})</span>` : '';
+    item.innerHTML = `<div><strong>${d.nombre}</strong> (@${d.username || 'user'})${rolBadge}</div><div>${badge}</div>`;
+    cont.appendChild(item);
   });
 }
 

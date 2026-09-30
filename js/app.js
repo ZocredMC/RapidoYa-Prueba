@@ -19,7 +19,11 @@ let modoAuth = 'login';
 let esCotizacionManual = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
-  inicializarMapa('map');
+  try {
+    inicializarMapa('map');
+  } catch (e) {
+    console.error("Error al inicializar mapa:", e);
+  }
   await verificarEstadoSesion();
   vincularEventosUI();
 });
@@ -28,15 +32,21 @@ async function verificarEstadoSesion() {
   try {
     usuarioActual = await obtenerUsuarioActual();
     if (usuarioActual && usuarioActual.profile) {
-      document.getElementById('guestButtons').style.display = 'none';
-      document.getElementById('userBadge').style.display = 'block';
+      const guestBtn = document.getElementById('guestButtons');
+      const userBadge = document.getElementById('userBadge');
+      if (guestBtn) guestBtn.style.display = 'none';
+      if (userBadge) userBadge.style.display = 'block';
+
       const displayTag = usuarioActual.profile.username ? `@${usuarioActual.profile.username}` : usuarioActual.profile.nombre;
-      document.getElementById('userNameTxt').innerText = `👋 ${displayTag} (${usuarioActual.profile.rol || 'cliente'})`;
+      const userNameTxt = document.getElementById('userNameTxt');
+      if (userNameTxt) userNameTxt.innerText = `👋 ${displayTag} (${usuarioActual.profile.rol || 'cliente'})`;
 
       configurarVistaSegunRol(usuarioActual.profile.rol);
     } else {
-      document.getElementById('guestButtons').style.display = 'block';
-      document.getElementById('userBadge').style.display = 'none';
+      const guestBtn = document.getElementById('guestButtons');
+      const userBadge = document.getElementById('userBadge');
+      if (guestBtn) guestBtn.style.display = 'block';
+      if (userBadge) userBadge.style.display = 'none';
       configurarVistaSegunRol('cliente');
     }
   } catch (err) {
@@ -49,18 +59,18 @@ async function configurarVistaSegunRol(rol) {
   const pDom = document.getElementById('panelDomiciliario');
   const pAdmin = document.getElementById('panelAdmin');
 
-  pCliente.style.display = 'none';
-  pDom.style.display = 'none';
-  pAdmin.style.display = 'none';
+  if (pCliente) pCliente.style.display = 'none';
+  if (pDom) pDom.style.display = 'none';
+  if (pAdmin) pAdmin.style.display = 'none';
 
   if (rol === 'domiciliario') {
-    pDom.style.display = 'block';
+    if (pDom) pDom.style.display = 'block';
     cargarVistaDomiciliario();
   } else if (rol === 'admin') {
-    pAdmin.style.display = 'block';
+    if (pAdmin) pAdmin.style.display = 'block';
     cargarVistaAdmin();
   } else {
-    pCliente.style.display = 'block';
+    if (pCliente) pCliente.style.display = 'block';
   }
 }
 
@@ -68,12 +78,15 @@ async function configurarVistaSegunRol(rol) {
 async function abrirModalMisPedidos() {
   if (!usuarioActual) return;
   
-  document.getElementById('modalMisPedidos').style.display = 'flex';
+  const modal = document.getElementById('modalMisPedidos');
+  if (modal) modal.style.display = 'flex';
   const contList = document.getElementById('contenedorMisPedidosList');
-  contList.innerHTML = '<p style="color:#888;">Cargando pedidos...</p>';
+  if (contList) contList.innerHTML = '<p style="color:#888;">Cargando pedidos...</p>';
 
   try {
     const pedidos = await obtenerPedidosCliente(usuarioActual.id);
+    if (!contList) return;
+
     if (!pedidos.length) {
       contList.innerHTML = '<p style="color:#888;">Aún no has realizado pedidos.</p>';
       return;
@@ -109,7 +122,7 @@ async function abrirModalMisPedidos() {
       contList.appendChild(card);
     });
   } catch (err) {
-    contList.innerHTML = `<p style="color:#ff5555;">Error al cargar pedidos: ${err.message}</p>`;
+    if (contList) contList.innerHTML = `<p style="color:#ff5555;">Error al cargar pedidos: ${err.message}</p>`;
   }
 }
 
@@ -151,6 +164,7 @@ function actualizarBotonEstadoServicio() {
 }
 
 async function alternarEstadoServicio() {
+  if (!usuarioActual) return;
   const estActual = usuarioActual.profile.estado_servicio || 'fuera_de_servicio';
   const nuevoEst = (estActual === 'activo' || estActual === 'ocupado') ? 'fuera_de_servicio' : 'activo';
 
@@ -169,6 +183,7 @@ async function actualizarCuadreDiario() {
 }
 
 async function cargarListasPedidos() {
+  if (!usuarioActual) return;
   const pendientes = await obtenerPedidosPendientes();
   const activos = await obtenerPedidosActivosDomiciliario(usuarioActual.id);
 
@@ -219,18 +234,15 @@ function crearCardPedido(p, tipoEstado) {
   card.innerHTML = html;
 
   setTimeout(() => {
-    if (document.getElementById(`btnAceptar_${p.id}`)) {
-      document.getElementById(`btnAceptar_${p.id}`).onclick = () => procesarCambioEstado(p.id, 'aceptado');
-    }
-    if (document.getElementById(`btnEnCamino_${p.id}`)) {
-      document.getElementById(`btnEnCamino_${p.id}`).onclick = () => procesarCambioEstado(p.id, 'en_camino');
-    }
-    if (document.getElementById(`btnCompletado_${p.id}`)) {
-      document.getElementById(`btnCompletado_${p.id}`).onclick = () => procesarCambioEstado(p.id, 'completado');
-    }
-    if (document.getElementById(`btnNoReciben_${p.id}`)) {
-      document.getElementById(`btnNoReciben_${p.id}`).onclick = () => procesarCambioEstado(p.id, 'cancelado');
-    }
+    const btnAceptar = document.getElementById(`btnAceptar_${p.id}`);
+    const btnCamino = document.getElementById(`btnEnCamino_${p.id}`);
+    const btnCompletado = document.getElementById(`btnCompletado_${p.id}`);
+    const btnNoReciben = document.getElementById(`btnNoReciben_${p.id}`);
+
+    if (btnAceptar) btnAceptar.onclick = () => procesarCambioEstado(p.id, 'aceptado');
+    if (btnCamino) btnCamino.onclick = () => procesarCambioEstado(p.id, 'en_camino');
+    if (btnCompletado) btnCompletado.onclick = () => procesarCambioEstado(p.id, 'completado');
+    if (btnNoReciben) btnNoReciben.onclick = () => procesarCambioEstado(p.id, 'cancelado');
   }, 100);
 
   return card;
@@ -305,7 +317,7 @@ function renderizarEstadosDomiciliariosAdmin() {
 
 function poblarSelectorDomiciliarios() {
   const select = document.getElementById('selectFiltroDomiciliario');
-  if (!select) return;
+  if (!select || !datosAdminGlobales) return;
   const valorPrevio = select.value;
   select.innerHTML = '<option value="">-- Seleccionar Domiciliario --</option>';
 
@@ -390,9 +402,13 @@ async function manejarCotizacion() {
   try {
     esCotizacionManual = false;
     datosCotizacionGlobal = await cotizarRuta(origen, destino);
-    document.getElementById('distanciaTxt').innerText = datosCotizacionGlobal.distanciaKm;
-    document.getElementById('precioTxtContainer').innerHTML = `$${datosCotizacionGlobal.precio.toLocaleString('es-CO')} COP`;
-    document.getElementById('resultBox').style.display = 'block';
+    const distTxt = document.getElementById('distanciaTxt');
+    const precioContainer = document.getElementById('precioTxtContainer');
+    const resultBox = document.getElementById('resultBox');
+
+    if (distTxt) distTxt.innerText = datosCotizacionGlobal.distanciaKm;
+    if (precioContainer) precioContainer.innerHTML = `$${datosCotizacionGlobal.precio.toLocaleString('es-CO')} COP`;
+    if (resultBox) resultBox.style.display = 'block';
   } catch (error) {
     alert(error.message);
   }
@@ -415,76 +431,56 @@ function manejarCotizacionManual() {
     precio: 0
   };
 
-  document.getElementById('distanciaTxt').innerText = 'N/A';
-  document.getElementById('precioTxtContainer').innerHTML = '<span style="color:#ffcc00; font-weight:bold;">El operador te dará el valor</span>';
-  document.getElementById('resultBox').style.display = 'block';
+  const distTxt = document.getElementById('distanciaTxt');
+  const precioContainer = document.getElementById('precioTxtContainer');
+  const resultBox = document.getElementById('resultBox');
+
+  if (distTxt) distTxt.innerText = 'N/A';
+  if (precioContainer) precioContainer.innerHTML = '<span style="color:#ffcc00; font-weight:bold;">El operador te dará el valor</span>';
+  if (resultBox) resultBox.style.display = 'block';
 }
 
 function manejarPreguntaOModal() {
   if (!usuarioActual) {
-    document.getElementById('modalPreguntaInvitado').style.display = 'flex';
+    const modalInv = document.getElementById('modalPreguntaInvitado');
+    if (modalInv) modalInv.style.display = 'flex';
   } else {
     abrirModalPedido();
   }
 }
 
 window.abrirModalPedido = function() {
-  document.getElementById('barrioOrigenModal').value = datosCotizacionGlobal.origen;
-  document.getElementById('barrioDestinoModal').value = datosCotizacionGlobal.destino;
+  const bOrigen = document.getElementById('barrioOrigenModal');
+  const bDestino = document.getElementById('barrioDestinoModal');
+  if (bOrigen && datosCotizacionGlobal) bOrigen.value = datosCotizacionGlobal.origen;
+  if (bDestino && datosCotizacionGlobal) bDestino.value = datosCotizacionGlobal.destino;
 
   if (usuarioActual && usuarioActual.profile) {
-    document.getElementById('clienteNombre').value = usuarioActual.profile.nombre || '';
-    document.getElementById('clienteTelefono').value = usuarioActual.profile.telefono || '';
-    document.getElementById('dirExactaOrigen').value = usuarioActual.profile.direccion || '';
+    const cNombre = document.getElementById('clienteNombre');
+    const cTel = document.getElementById('clienteTelefono');
+    const dOrigen = document.getElementById('dirExactaOrigen');
+
+    if (cNombre) cNombre.value = usuarioActual.profile.nombre || '';
+    if (cTel) cTel.value = usuarioActual.profile.telefono || '';
+    if (dOrigen) dOrigen.value = usuarioActual.profile.direccion || '';
   }
 
-  document.getElementById('modalPedido').style.display = 'flex';
+  const modalPedido = document.getElementById('modalPedido');
+  if (modalPedido) modalPedido.style.display = 'flex';
 };
 
 window.abrirAuthModal = function(modo) {
   modoAuth = modo;
-  document.getElementById('modalAuth').style.display = 'flex';
+  const modalAuth = document.getElementById('modalAuth');
+  if (modalAuth) modalAuth.style.display = 'flex';
   const esRegistro = modo === 'register';
   
-  document.getElementById('authModalTitle').innerText = esRegistro ? 'Crear Cuenta' : 'Iniciar Sesión';
-  document.getElementById('groupUsername').style.display = esRegistro ? 'block' : 'none';
-  document.getElementById('groupNombre').style.display = esRegistro ? 'block' : 'none';
-  document.getElementById('groupTelefono').style.display = esRegistro ? 'block' : 'none';
-  document.getElementById('groupDireccion').style.display = esRegistro ? 'block' : 'none';
-  document.getElementById('btnAuthSubmit').innerText = esRegistro ? 'Registrarse' : 'Ingresar';
-};
+  const title = document.getElementById('authModalTitle');
+  const gUser = document.getElementById('groupUsername');
+  const gNom = document.getElementById('groupNombre');
+  const gTel = document.getElementById('groupTelefono');
+  const gDir = document.getElementById('groupDireccion');
+  const btnSub = document.getElementById('btnAuthSubmit');
 
-window.cerrarModal = function(modalId) {
-  document.getElementById(modalId).style.display = 'none';
-};
-
-async function manejarSubmitAuth() {
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value.trim();
-
-  try {
-    if (modoAuth === 'register') {
-      const username = document.getElementById('authUsername').value;
-      const nombre = document.getElementById('authNombre').value;
-      const telefono = document.getElementById('authTelefono').value;
-      const direccion = document.getElementById('authDireccion').value;
-
-      if (!email || !password || !username || !nombre || !telefono) {
-        alert("Por favor completa todos los campos requeridos.");
-        return;
-      }
-
-      await registrarUsuario({ email, password, username, nombre, telefono, direccion });
-      alert("¡Registro exitoso!");
-    } else {
-      await iniciarSesion(email, password);
-    }
-    location.reload();
-  } catch (err) {
-    alert("Error: " + err.message);
-  }
-}
-
-async function enviarWhatsApp() {
-  const nombre = document.getElementById('clienteNombre').value.trim();
- 
+  if (title) title.innerText = esRegistro ? 'Crear Cuenta' : 'Iniciar Sesión';
+  if (gUser) gUser.style.display = esRegistro ? 'b

@@ -57,7 +57,6 @@ async function configurarVistaSegunRol(rol) {
     pDom.style.display = 'block';
     cargarVistaDomiciliario();
   } else if (rol === 'admin') {
-    // El Administrador ÚNICAMENTE ve su Dashboard de Administrador
     pAdmin.style.display = 'block';
     cargarVistaAdmin();
   } else {
@@ -90,7 +89,7 @@ async function abrirModalMisPedidos() {
       else if (p.estado === 'aceptado') badgeEstado = '<span style="color:#00ccff; font-weight:bold;">🛵 Aceptado</span>';
       else if (p.estado === 'en_camino') badgeEstado = '<span style="color:#ff9900; font-weight:bold;">🚀 En Camino</span>';
       else if (p.estado === 'completado') badgeEstado = '<span style="color:#00ff88; font-weight:bold;">✅ Entregado</span>';
-      else if (p.estado === 'cancelado') badgeEstado = '<span style="color:#ff5555; font-weight:bold;">❌ No Recibido / Cancelado</span>';
+      else if (p.estado === 'cancelado') badgeEstado = '<span style="color:#ff5555; font-weight:bold;">❌ Cancelado / No Recibido</span>';
 
       const domNombre = p.nombreDomiciliario ? p.nombreDomiciliario : 'Buscando domiciliario...';
       const fechaFormat = new Date(p.created_at).toLocaleString('es-CO');
@@ -232,7 +231,6 @@ async function procesarCambioEstado(pedidoId, nuevoEstado) {
   try {
     await cambiarEstadoPedido(pedidoId, nuevoEstado, usuarioActual.id);
     
-    // Regla estricta: Permanece 'ocupado' durante aceptado y en_camino
     if (nuevoEstado === 'aceptado' || nuevoEstado === 'en_camino') {
       usuarioActual.profile.estado_servicio = 'ocupado';
     } else {
@@ -260,7 +258,6 @@ async function cargarVistaAdmin() {
   renderizarEstadosDomiciliariosAdmin();
   poblarSelectorDomiciliarios();
 
-  // Escuchar cambios de estado de usuarios en tiempo real para el Admin
   escucharEstadoDomiciliarios(() => {
     cargarVistaAdmin();
   });
@@ -271,7 +268,7 @@ function renderizarEstadosDomiciliariosAdmin() {
   cont.innerHTML = '';
 
   if (!datosAdminGlobales.listaDomiciliarios.length) {
-    cont.innerHTML = '<p style="color:#888;">No hay domiciliarios registrados aún.</p>';
+    cont.innerHTML = '<p style="color:#888;">No hay usuarios registrados aún.</p>';
     return;
   }
 
@@ -285,7 +282,8 @@ function renderizarEstadosDomiciliariosAdmin() {
     else if (est === 'ocupado') badge = '<span style="color:#ff9900; font-weight:bold;">🟠 En Carrera</span>';
     else badge = '<span style="color:#ff5555; font-weight:bold;">🔴 Fuera de Servicio</span>';
 
-    item.innerHTML = `<div><strong>${d.nombre}</strong> (@${d.username || 'user'})</div><div>${badge}</div>`;
+    const rolTag = d.rol ? ` (${d.rol})` : '';
+    item.innerHTML = `<div><strong>${d.nombre}</strong> (@${d.username || 'user'})${rolTag}</div><div>${badge}</div>`;
     cont.appendChild(item);
   });
 }

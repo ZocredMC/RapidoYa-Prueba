@@ -1,9 +1,7 @@
 import { supabase } from './config.js';
 
-// Calcular el inicio del día en hora de Colombia (00:00:00)
 function obtenerInicioDiaColombiaISO() {
   const ahora = new Date();
-  // Formatear la fecha actual a zona horaria de Colombia
   const fechaCo = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/Bogota',
     year: 'numeric',
@@ -15,7 +13,6 @@ function obtenerInicioDiaColombiaISO() {
   return new Date(`${y}-${m}-${d}T00:00:00-05:00`).toISOString();
 }
 
-// Obtener el cuadre diario de un domiciliario (desde las 00:00 de hoy)
 export async function obtenerCuadreDiarioDomiciliario(domiciliarioId) {
   const inicioDia = obtenerInicioDiaColombiaISO();
 
@@ -39,23 +36,20 @@ export async function obtenerCuadreDiarioDomiciliario(domiciliarioId) {
   };
 }
 
-// Obtener estadísticas globales y lista de domiciliarios con sus estados
 export async function obtenerEstadisticasAdmin() {
   const inicioDia = obtenerInicioDiaColombiaISO();
 
-  // 1. Obtener todos los domiciliarios
+  // Filtrar ÚNICAMENTE usuarios con rol 'domiciliario'
   const { data: domiciliarios } = await supabase
     .from('usuarios')
     .select('*')
-    .in('rol', ['domiciliario', 'admin']);
+    .eq('rol', 'domiciliario');
 
-  // 2. Obtener pedidos completados hoy
   const { data: pedidosHoy } = await supabase
     .from('pedidos')
     .select('*')
     .gte('created_at', inicioDia);
 
-  // 3. Obtener histórico general de pedidos
   const { data: todosLosPedidos } = await supabase
     .from('pedidos')
     .select('*');

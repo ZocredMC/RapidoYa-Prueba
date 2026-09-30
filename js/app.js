@@ -22,8 +22,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     inicializarMapa('map');
   } catch (e) {
-    console.error("Error al inicializar mapa:", e);
+    console.warn("Mapa inicializándose posteriormente:", e);
   }
+  
   await verificarEstadoSesion();
   vincularEventosUI();
 });
@@ -31,9 +32,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function verificarEstadoSesion() {
   try {
     usuarioActual = await obtenerUsuarioActual();
+    const guestBtn = document.getElementById('guestButtons');
+    const userBadge = document.getElementById('userBadge');
+
     if (usuarioActual && usuarioActual.profile) {
-      const guestBtn = document.getElementById('guestButtons');
-      const userBadge = document.getElementById('userBadge');
       if (guestBtn) guestBtn.style.display = 'none';
       if (userBadge) userBadge.style.display = 'block';
 
@@ -43,18 +45,17 @@ async function verificarEstadoSesion() {
 
       configurarVistaSegunRol(usuarioActual.profile.rol);
     } else {
-      const guestBtn = document.getElementById('guestButtons');
-      const userBadge = document.getElementById('userBadge');
       if (guestBtn) guestBtn.style.display = 'block';
       if (userBadge) userBadge.style.display = 'none';
       configurarVistaSegunRol('cliente');
     }
   } catch (err) {
     console.error("Error al cargar sesión:", err);
+    configurarVistaSegunRol('cliente');
   }
 }
 
-async function configurarVistaSegunRol(rol) {
+function configurarVistaSegunRol(rol) {
   const pCliente = document.getElementById('panelCliente');
   const pDom = document.getElementById('panelDomiciliario');
   const pAdmin = document.getElementById('panelAdmin');
@@ -87,7 +88,7 @@ async function abrirModalMisPedidos() {
     const pedidos = await obtenerPedidosCliente(usuarioActual.id);
     if (!contList) return;
 
-    if (!pedidos.length) {
+    if (!pedidos || !pedidos.length) {
       contList.innerHTML = '<p style="color:#888;">Aún no has realizado pedidos.</p>';
       return;
     }
@@ -270,24 +271,28 @@ async function procesarCambioEstado(pedidoId, nuevoEstado) {
 let datosAdminGlobales = null;
 
 async function cargarVistaAdmin() {
-  datosAdminGlobales = await obtenerEstadisticasAdmin();
-  
-  const vTxt = document.getElementById('adminTotalVentas');
-  const pTxt = document.getElementById('adminTotalPedidos');
-  const cTxt = document.getElementById('adminTotalCompletados');
-
-  if (vTxt) vTxt.innerText = datosAdminGlobales.totalVentas.toLocaleString('es-CO');
-  if (pTxt) pTxt.innerText = datosAdminGlobales.totalPedidos;
-  if (cTxt) cTxt.innerText = datosAdminGlobales.totalCompletados;
-
-  renderizarEstadosDomiciliariosAdmin();
-  poblarSelectorDomiciliarios();
-
-  escucharEstadoDomiciliarios(async () => {
+  try {
     datosAdminGlobales = await obtenerEstadisticasAdmin();
+    
+    const vTxt = document.getElementById('adminTotalVentas');
+    const pTxt = document.getElementById('adminTotalPedidos');
+    const cTxt = document.getElementById('adminTotalCompletados');
+
+    if (vTxt) vTxt.innerText = datosAdminGlobales.totalVentas.toLocaleString('es-CO');
+    if (pTxt) pTxt.innerText = datosAdminGlobales.totalPedidos;
+    if (cTxt) cTxt.innerText = datosAdminGlobales.totalCompletados;
+
     renderizarEstadosDomiciliariosAdmin();
     poblarSelectorDomiciliarios();
-  });
+
+    escucharEstadoDomiciliarios(async () => {
+      datosAdminGlobales = await obtenerEstadisticasAdmin();
+      renderizarEstadosDomiciliariosAdmin();
+      poblarSelectorDomiciliarios();
+    });
+  } catch (err) {
+    console.error("Error al cargar vista admin:", err);
+  }
 }
 
 function renderizarEstadosDomiciliariosAdmin() {
@@ -449,6 +454,7 @@ function manejarPreguntaOModal() {
   }
 }
 
+// FUNCIONES GLOBALES PARA EL HTML (onclick)
 window.abrirModalPedido = function() {
   const bOrigen = document.getElementById('barrioOrigenModal');
   const bDestino = document.getElementById('barrioDestinoModal');
@@ -482,5 +488,4 @@ window.abrirAuthModal = function(modo) {
   const gDir = document.getElementById('groupDireccion');
   const btnSub = document.getElementById('btnAuthSubmit');
 
-  if (title) title.innerText = esRegistro ? 'Crear Cuenta' : 'Iniciar Sesión';
-  if (gUser) gUser.style.display = esRegistro ? 'b
+  if (title) title.innerText = esRegist

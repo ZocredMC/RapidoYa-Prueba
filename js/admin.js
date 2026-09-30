@@ -39,13 +39,14 @@ export async function obtenerCuadreDiarioDomiciliario(domiciliarioId) {
 export async function obtenerEstadisticasAdmin() {
   const inicioDia = obtenerInicioDiaColombiaISO();
 
-  // 1. Consultar todos los usuarios para mostrar la lista en el Admin
-  const { data: usuariosTotal, error: errUsers } = await supabase
+  // 1. Consultar ÚNICAMENTE usuarios con rol 'domiciliario'
+  const { data: domiciliariosSolo, error: errUsers } = await supabase
     .from('usuarios')
     .select('*')
+    .eq('rol', 'domiciliario')
     .order('nombre', { ascending: true });
 
-  if (errUsers) console.error("Error cargando usuarios admin:", errUsers);
+  if (errUsers) console.error("Error cargando domiciliarios admin:", errUsers);
 
   // 2. Pedidos de hoy
   const { data: pedidosHoy } = await supabase
@@ -74,7 +75,7 @@ export async function obtenerEstadisticasAdmin() {
     totalVentas: totalVentasHoy,
     totalPedidos: todosLosPedidos ? todosLosPedidos.length : 0,
     totalCompletados: totalCompletadosHoy,
-    listaDomiciliarios: usuariosTotal || [],
+    listaDomiciliarios: domiciliariosSolo || [],
     todosLosPedidos: todosLosPedidos || []
   };
 }

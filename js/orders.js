@@ -1,67 +1,31 @@
 import { supabase } from './config.js';
 
-let canalRealtime = null;
-
-// Crear un nuevo pedido en la base de datos
+// Crear un nuevo pedido
 export async function crearPedido(datosPedido) {
   const { data, error } = await supabase
     .from('pedidos')
     .insert([datosPedido])
-    .select()
-    .single();
+    .select();
 
   if (error) throw error;
   return data;
 }
 
-// Escuchar nuevos pedidos en Tiempo Real (Para Domiciliarios y Admins)
-export function escucharNuevosPedidos(callbackAlerta) {
-  if (canalRealtime) supabase.removeChannel(canalRealtime);
-
-  canalRealtime = supabase
-    .channel('cambios-pedidos')
+// Escuchar cambios en tiempo real en la tabla pedidos
+export function escucharNuevosPedidos(callback) {
+  return supabase
+    .channel('pedidos-channel')
     .on(
       'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'pedidos' },
+      { event: '*', schema: 'public', table: 'pedidos' },
       (payload) => {
-        callbackAlerta(payload.new);
-      }
-    )
-    .on(
-      'postgres_changes',
-      { event: 'UPDATE', schema: 'public', table: 'pedidos' },
-      (payload) => {
-        callbackAlerta(payload.new);
+        callback(payload);
       }
     )
     .subscribe();
 }
 
-// Cambiar estado del pedido ('aceptado', 'en_camino', 'completado', 'cancelado')
-export async function cambiarEstadoPedido(pedidoId, nuevoEstado, domiciliarioId = null) {
-  const datosUpdate = { estado: nuevoEstado };
-
-  if (nuevoEstado === 'aceptado') {
-    datosUpdate.domiciliario_id = domiciliarioId;
-    datosUpdate.fecha_aceptado = new Date().toISOString();
-  } else if (nuevoEstado === 'en_camino') {
-    datosUpdate.fecha_en_camino = new Date().toISOString();
-  } else if (nuevoEstado === 'completado') {
-    datosUpdate.fecha_completado = new Date().toISOString();
-  }
-
-  const { data, error } = await supabase
-    .from('pedidos')
-    .update(datosUpdate)
-    .eq('id', pedidoId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-// Obtener pedidos pendientes para la bolsa de domiciliarios
+// Obtener pedidos pendientes de asignación
 export async function obtenerPedidosPendientes() {
   const { data, error } = await supabase
     .from('pedidos')
@@ -73,7 +37,7 @@ export async function obtenerPedidosPendientes() {
   return data;
 }
 
-// Obtener pedidos activos de un domiciliario especifico
+// Obtener pedidos activos tomados por un domiciliario
 export async function obtenerPedidosActivosDomiciliario(domiciliarioId) {
   const { data, error } = await supabase
     .from('pedidos')
@@ -86,9 +50,40 @@ export async function obtenerPedidosActivosDomiciliario(domiciliarioId) {
   return data;
 }
 
-// Obtener historial de pedidos de un cliente
+// Cambiar el estado de un pedido y registrar el domiciliario que lo aceptó
+export async function cambiarEstadoPedido(pedidoId, nuevoEstado, domiciliarioId) {
+  const datosActualizacion = {
+    estado: nuevoEstado
+  };
+
+  // Se asigna el ID del domiciliario desde el momento en que interactúa
+  if (domiciliarioId) {
+    datosActualizacion.domiciliario_id = domiciliarioId;
+  }
+
+  // Marcar fechas de cambio de estado
+  const ahora = new Date().toISOString();
+  if (nuevoEstado === 'aceptado') {
+    datosActualizacion.fecha_aceptado = ahora;
+  } else if (nuevoEstado === 'en_camino') {
+    datosActualizacion.fecha_en_camino = ahora;
+  } else if (nuevoEstado === 'completado') {
+    datosActualizacion.fecha_completado = ahora;
+  }
+
+  const { data, error } = await supabase
+    .from('pedidos')
+    .update(datosActualizacion)
+    .eq('id', pedidoId)
+    .select();
+
+  if (error) throw error;
+  return data;
+}
+
+// Obtener historial de pedidos del cliente mostrando su nombre real
 export async function obtenerPedidosCliente(clienteId) {
-  // 1. Obtener los pedidos del cliente
+  // 1. Obtener pedidos del cliente
   const { data: pedidos, error } = await supabase
     .from('pedidos')
     .select('*')
@@ -98,21 +93,20 @@ export async function obtenerPedidosCliente(clienteId) {
   if (error) throw error;
   if (!pedidos || pedidos.length === 0) return [];
 
-  // 2. Extraer los IDs de domiciliarios asignados
+  // 2. Extraer los IDs de domiciliarios
   const domiciliariosIds = [...new Set(pedidos.map(p => p.domiciliario_id).filter(Boolean))];
 
   if (domiciliariosIds.length > 0) {
-    // 3. Consultar los datos de esos domiciliarios en la tabla usuarios
+    // 3. Consultar el nombre real en la tabla usuarios
     const { data: usuarios } = await supabase
       .from('usuarios')
-      .select('id, nombre, username')
+      .select('id, nombre')
       .in('id', domiciliariosIds);
 
     if (usuarios) {
       const mapaUsuarios = {};
       usuarios.forEach(u => { mapaUsuarios[u.id] = u; });
 
-      // 4. Adjuntar el domiciliario correspondiente a cada pedido
       return pedidos.map(p => ({
         ...p,
         domiciliario: p.domiciliario_id ? mapaUsuarios[p.domiciliario_id] : null

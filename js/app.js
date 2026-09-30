@@ -113,56 +113,23 @@ async function abrirModalMisPedidos() {
   }
 }
 
-// ---------------- PANEL ADMIN ----------------
-let datosAdminGlobales = null;
+// ---------------- PANEL DOMICILIARIO ----------------
+async function cargarVistaDomiciliario() {
+  actualizarCuadreDiario();
+  cargarListasPedidos();
+  actualizarBotonEstadoServicio();
 
-async function cargarVistaAdmin() {
-  datosAdminGlobales = await obtenerEstadisticasAdmin();
-  
-  document.getElementById('adminTotalVentas').innerText = datosAdminGlobales.totalVentas.toLocaleString('es-CO');
-  document.getElementById('adminTotalPedidos').innerText = datosAdminGlobales.totalPedidos;
-  document.getElementById('adminTotalCompletados').innerText = datosAdminGlobales.totalCompletados;
-
-  renderizarEstadosDomiciliariosAdmin();
-  poblarSelectorDomiciliarios();
-
-  // Listener en tiempo real optimizado para reflejar cambios de estado sin recargar la página
-  escucharEstadoDomiciliarios(async (payload) => {
-    // Actualizar los datos globales de manera inmediata cuando ocurra un cambio en usuarios
-    datosAdminGlobales = await obtenerEstadisticasAdmin();
-    renderizarEstadosDomiciliariosAdmin();
-    poblarSelectorDomiciliarios();
-  });
-}
-
-function renderizarEstadosDomiciliariosAdmin() {
-  const cont = document.getElementById('listaEstadoDomiciliarios');
-  cont.innerHTML = '';
-
-  if (!datosAdminGlobales || !datosAdminGlobales.listaDomiciliarios.length) {
-    cont.innerHTML = '<p style="color:#888;">No hay personal operativo registrado.</p>';
-    return;
-  }
-
-  datosAdminGlobales.listaDomiciliarios.forEach(d => {
-    const item = document.createElement('div');
-    item.style.cssText = "background: #2a2a2a; padding: 10px; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #444;";
-
-    let badge = '';
-    const est = d.estado_servicio || 'fuera_de_servicio';
-    if (est === 'activo') badge = '<span style="color:#00ff88; font-weight:bold;">🟢 En Servicio</span>';
-    else if (est === 'ocupado') badge = '<span style="color:#ff9900; font-weight:bold;">🟠 En Carrera</span>';
-    else badge = '<span style="color:#ff5555; font-weight:bold;">🔴 Fuera de Servicio</span>';
-
-    const rolBadge = d.rol ? ` <span style="font-size:0.75rem; color:#888;">(${d.rol})</span>` : '';
-    item.innerHTML = `<div><strong>${d.nombre}</strong> (@${d.username || 'user'})${rolBadge}</div><div>${badge}</div>`;
-    cont.appendChild(item);
+  escucharNuevosPedidos(() => {
+    cargarListasPedidos();
+    actualizarCuadreDiario();
   });
 }
 
 function actualizarBotonEstadoServicio() {
   const txt = document.getElementById('txtEstadoServicio');
   const btn = document.getElementById('btnToggleServicio');
+  if (!txt || !btn || !usuarioActual || !usuarioActual.profile) return;
+  
   const est = usuarioActual.profile.estado_servicio || 'fuera_de_servicio';
 
   if (est === 'activo') {
@@ -195,8 +162,10 @@ async function alternarEstadoServicio() {
 async function actualizarCuadreDiario() {
   if (!usuarioActual) return;
   const cuadre = await obtenerCuadreDiarioDomiciliario(usuarioActual.id);
-  document.getElementById('cuadreDiarioTxt').innerText = cuadre.totalRecaudado.toLocaleString('es-CO');
-  document.getElementById('conteoEntregasTxt').innerText = cuadre.totalViajes;
+  const cuadreTxt = document.getElementById('cuadreDiarioTxt');
+  const conteoTxt = document.getElementById('conteoEntregasTxt');
+  if (cuadreTxt) cuadreTxt.innerText = cuadre.totalRecaudado.toLocaleString('es-CO');
+  if (conteoTxt) conteoTxt.innerText = cuadre.totalViajes;
 }
 
 async function cargarListasPedidos() {
@@ -206,15 +175,19 @@ async function cargarListasPedidos() {
   const contPendientes = document.getElementById('listaPedidosPendientes');
   const contActivos = document.getElementById('listaPedidosActivos');
 
-  contPendientes.innerHTML = pendientes.length ? '' : '<p style="color: #888;">No hay pedidos pendientes en la ciudad.</p>';
-  pendientes.forEach(p => {
-    contPendientes.appendChild(crearCardPedido(p, 'pendiente'));
-  });
+  if (contPendientes) {
+    contPendientes.innerHTML = pendientes.length ? '' : '<p style="color: #888;">No hay pedidos pendientes en la ciudad.</p>';
+    pendientes.forEach(p => {
+      contPendientes.appendChild(crearCardPedido(p, 'pendiente'));
+    });
+  }
 
-  contActivos.innerHTML = activos.length ? '' : '<p style="color: #888;">Sin pedidos activos en este momento.</p>';
-  activos.forEach(p => {
-    contActivos.appendChild(crearCardPedido(p, p.estado));
-  });
+  if (contActivos) {
+    contActivos.innerHTML = activos.length ? '' : '<p style="color: #888;">Sin pedidos activos en este momento.</p>';
+    activos.forEach(p => {
+      contActivos.appendChild(crearCardPedido(p, p.estado));
+    });
+  }
 }
 
 function crearCardPedido(p, tipoEstado) {
@@ -287,14 +260,17 @@ let datosAdminGlobales = null;
 async function cargarVistaAdmin() {
   datosAdminGlobales = await obtenerEstadisticasAdmin();
   
-  document.getElementById('adminTotalVentas').innerText = datosAdminGlobales.totalVentas.toLocaleString('es-CO');
-  document.getElementById('adminTotalPedidos').innerText = datosAdminGlobales.totalPedidos;
-  document.getElementById('adminTotalCompletados').innerText = datosAdminGlobales.totalCompletados;
+  const vTxt = document.getElementById('adminTotalVentas');
+  const pTxt = document.getElementById('adminTotalPedidos');
+  const cTxt = document.getElementById('adminTotalCompletados');
+
+  if (vTxt) vTxt.innerText = datosAdminGlobales.totalVentas.toLocaleString('es-CO');
+  if (pTxt) pTxt.innerText = datosAdminGlobales.totalPedidos;
+  if (cTxt) cTxt.innerText = datosAdminGlobales.totalCompletados;
 
   renderizarEstadosDomiciliariosAdmin();
   poblarSelectorDomiciliarios();
 
-  // Escuchar cualquier actualización de usuarios en tiempo real y refrescar la UI de inmediato
   escucharEstadoDomiciliarios(async () => {
     datosAdminGlobales = await obtenerEstadisticasAdmin();
     renderizarEstadosDomiciliariosAdmin();
@@ -304,9 +280,10 @@ async function cargarVistaAdmin() {
 
 function renderizarEstadosDomiciliariosAdmin() {
   const cont = document.getElementById('listaEstadoDomiciliarios');
+  if (!cont) return;
   cont.innerHTML = '';
 
-  if (!datosAdminGlobales.listaDomiciliarios.length) {
+  if (!datosAdminGlobales || !datosAdminGlobales.listaDomiciliarios.length) {
     cont.innerHTML = '<p style="color:#888;">No hay domiciliarios registrados aún.</p>';
     return;
   }
@@ -328,6 +305,7 @@ function renderizarEstadosDomiciliariosAdmin() {
 
 function poblarSelectorDomiciliarios() {
   const select = document.getElementById('selectFiltroDomiciliario');
+  if (!select) return;
   const valorPrevio = select.value;
   select.innerHTML = '<option value="">-- Seleccionar Domiciliario --</option>';
 
@@ -345,6 +323,7 @@ function poblarSelectorDomiciliarios() {
 
 function mostrarHistoricoDomiciliario(domiciliarioId) {
   const cont = document.getElementById('contenedorHistoricoDomiciliario');
+  if (!cont) return;
   if (!domiciliarioId) {
     cont.innerHTML = '';
     return;
@@ -374,17 +353,29 @@ function mostrarHistoricoDomiciliario(domiciliarioId) {
 }
 
 function vincularEventosUI() {
-  document.getElementById('btnCalcular').addEventListener('click', manejarCotizacion);
-  document.getElementById('btnCotizacionManual').addEventListener('click', manejarCotizacionManual);
-  document.getElementById('btnHacerPedido').addEventListener('click', manejarPreguntaOModal);
-  document.getElementById('btnEnviarWhatsApp').addEventListener('click', enviarWhatsApp);
-  document.getElementById('btnAuthSubmit').addEventListener('click', manejarSubmitAuth);
-  document.getElementById('btnToggleServicio')?.addEventListener('click', alternarEstadoServicio);
-  document.getElementById('btnMisPedidosCliente')?.addEventListener('click', abrirModalMisPedidos);
-  document.getElementById('btnCerrarSesion')?.addEventListener('click', async () => {
-    await cerrarSesion();
-    location.reload();
-  });
+  const btnCalcular = document.getElementById('btnCalcular');
+  const btnManual = document.getElementById('btnCotizacionManual');
+  const btnPedido = document.getElementById('btnHacerPedido');
+  const btnWsp = document.getElementById('btnEnviarWhatsApp');
+  const btnAuth = document.getElementById('btnAuthSubmit');
+  const btnServicio = document.getElementById('btnToggleServicio');
+  const btnMisPedidos = document.getElementById('btnMisPedidosCliente');
+  const btnSalir = document.getElementById('btnCerrarSesion');
+
+  if (btnCalcular) btnCalcular.addEventListener('click', manejarCotizacion);
+  if (btnManual) btnManual.addEventListener('click', manejarCotizacionManual);
+  if (btnPedido) btnPedido.addEventListener('click', manejarPreguntaOModal);
+  if (btnWsp) btnWsp.addEventListener('click', enviarWhatsApp);
+  if (btnAuth) btnAuth.addEventListener('click', manejarSubmitAuth);
+  if (btnServicio) btnServicio.addEventListener('click', alternarEstadoServicio);
+  if (btnMisPedidos) btnMisPedidos.addEventListener('click', abrirModalMisPedidos);
+  if (btnSalir) {
+    btnSalir.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await cerrarSesion();
+      location.reload();
+    });
+  }
 }
 
 async function manejarCotizacion() {
@@ -496,69 +487,4 @@ async function manejarSubmitAuth() {
 
 async function enviarWhatsApp() {
   const nombre = document.getElementById('clienteNombre').value.trim();
-  const telefono = document.getElementById('clienteTelefono').value.trim();
-  const dirOrigen = document.getElementById('dirExactaOrigen').value.trim();
-  const dirDestino = document.getElementById('dirExactaDestino').value.trim();
-  const obs = document.getElementById('observacionesInput').value.trim() || "Sin observaciones";
-
-  if (!nombre || !telefono || !dirOrigen || !dirDestino) {
-    alert("Por favor completa tu nombre, teléfono y las direcciones exactas.");
-    return;
-  }
-
-  try {
-    await crearPedido({
-      cliente_id: usuarioActual ? usuarioActual.id : null,
-      cliente_nombre: nombre,
-      cliente_telefono: telefono,
-      origen_barrio: datosCotizacionGlobal.origen,
-      origen_direccion: dirOrigen,
-      destino_barrio: datosCotizacionGlobal.destino,
-      destino_direccion: dirDestino,
-      distancia_km: datosCotizacionGlobal.distanciaKm,
-      precio: datosCotizacionGlobal.precio,
-      observaciones: obs,
-      estado: 'pendiente'
-    });
-
-    const userTag = (usuarioActual && usuarioActual.profile && usuarioActual.profile.username)
-      ? ` (@${usuarioActual.profile.username})`
-      : '';
-
-    const precioTextoWS = datosCotizacionGlobal.precio === 0 
-      ? '*POR DEFINIR POR OPERADOR*' 
-      : `$${datosCotizacionGlobal.precio.toLocaleString('es-CO')} COP`;
-
-    const mensajeTexto = `🚴‍♂ *¡NUEVO DOMICILIO - TULUÁ EXPRESS!*\n\n` +
-      `👤 *Cliente:* ${nombre}${userTag}\n` +
-      `📞 *Teléfono:* ${telefono}\n\n` +
-      `📍 *RECOGER EN:*\n` +
-      `• Barrio: ${datosCotizacionGlobal.origen}\n` +
-      `• Dirección Exacta: ${dirOrigen}\n\n` +
-      `🏁 *ENTREGAR EN:*\n` +
-      `• Barrio: ${datosCotizacionGlobal.destino}\n` +
-      `• Dirección Exacta: ${dirDestino}\n\n` +
-      `📏 *Distancia:* ${datosCotizacionGlobal.distanciaKm || 'Manual'} km\n` +
-      `💰 *VALOR A COBRAR:* ${precioTextoWS}\n\n` +
-      `📝 *Observaciones:* ${obs}`;
-
-    const urlWhatsApp = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensajeTexto)}`;
-    
-    window.open(urlWhatsApp, '_blank');
-    window.cerrarModal('modalPedido');
-    reiniciarCotizador();
-  } catch (error) {
-    alert("Error al registrar el pedido: " + error.message);
-  }
-}
-
-function reiniciarCotizador() {
-  document.getElementById('origenInput').value = '';
-  document.getElementById('destinoInput').value = '';
-  document.getElementById('dirExactaOrigen').value = '';
-  document.getElementById('dirExactaDestino').value = '';
-  document.getElementById('observacionesInput').value = '';
-  document.getElementById('resultBox').style.display = 'none';
-  limpiarMapa();
-  datosCotizacionGlobal = null;
-}
+ 

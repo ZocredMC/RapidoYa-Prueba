@@ -88,12 +88,37 @@ export async function obtenerPedidosActivosDomiciliario(domiciliarioId) {
 
 // Obtener historial de pedidos de un cliente
 export async function obtenerPedidosCliente(clienteId) {
-  const { data, error } = await supabase
+  // 1. Obtener los pedidos del cliente
+  const { data: pedidos, error } = await supabase
     .from('pedidos')
-    .select('*, domiciliario:usuarios!pedidos_domiciliario_id_fkey(nombre, username)')
+    .select('*')
     .eq('cliente_id', clienteId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data;
+  if (!pedidos || pedidos.length === 0) return [];
+
+  // 2. Extraer los IDs de domiciliarios asignados
+  const domiciliariosIds = [...new Set(pedidos.map(p => p.domiciliario_id).filter(Boolean))];
+
+  if (domiciliariosIds.length > 0) {
+    // 3. Consultar los datos de esos domiciliarios en la tabla usuarios
+    const { data: usuarios } = await supabase
+      .from('usuarios')
+      .select('id, nombre, username')
+      .in('id', domiciliariosIds);
+
+    if (usuarios) {
+      const mapaUsuarios = {};
+      usuarios.forEach(u => { mapaUsuarios[u.id] = u; });
+
+      // 4. Adjuntar el domiciliario correspondiente a cada pedido
+      return pedidos.map(p => ({
+        ...p,
+        domiciliario: p.domiciliario_id ? mapaUsuarios[p.domiciliario_id] : null
+      }));
+    }
+  }
+
+  return pedidos;
 }

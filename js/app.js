@@ -1,14 +1,7 @@
 import { obtenerUsuarioActual, registrarUsuario, iniciarSesion, cerrarSesion } from './auth.js';
 import { inicializarMapa, cotizarRuta, limpiarMapa } from './map.js';
 import { NUMERO_WHATSAPP } from './config.js';
-import { 
-  crearPedido, 
-  escucharNuevosPedidos, 
-  cambiarEstadoPedido, 
-  obtenerPedidosPendientes, 
-  obtenerPedidosActivosDomiciliario, 
-  obtenerPedidosCliente 
-} from './orders.js';
+import { crearPedido, escucharNuevosPedidos, cambiarEstadoPedido, obtenerPedidosPendientes, obtenerPedidosActivosDomiciliario, obtenerPedidosCliente } from './orders.js';
 import { obtenerCuadreDiarioDomiciliario, obtenerEstadisticasAdmin } from './admin.js';
 
 let usuarioActual = null;
@@ -54,7 +47,7 @@ async function configurarVistaSegunRol(rol) {
     pDom.style.display = 'block';
     cargarVistaDomiciliario();
   } else if (rol === 'admin') {
-    // El administrador tiene acceso tanto a las Estadísticas como a la Bolsa de Domiciliarios
+    // El administrador tiene acceso tanto a las Estadísticas como al Panel de Domiciliarios
     pAdmin.style.display = 'block';
     pDom.style.display = 'block';
     cargarVistaAdmin();
@@ -90,11 +83,11 @@ async function abrirModalMisPedidos() {
       else if (p.estado === 'en_camino') badgeEstado = '<span style="color:#ff9900; font-weight:bold;">🚀 En Camino</span>';
       else if (p.estado === 'completado') badgeEstado = '<span style="color:#00ff88; font-weight:bold;">✅ Entregado</span>';
 
-      const domNombre = p.nombreDomiciliario ? p.nombreDomiciliario : 'Buscando domiciliario...';
+      const domNombre = p.domiciliario ? `@${p.domiciliario.username}` : 'Buscando domiciliario...';
       const fechaFormat = new Date(p.created_at).toLocaleString('es-CO');
 
       card.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
+        <div style="display:flex; justify-between; align-items:center; margin-bottom: 5px;">
           <small style="color:#888;">${fechaFormat}</small>
           <div>${badgeEstado}</div>
         </div>

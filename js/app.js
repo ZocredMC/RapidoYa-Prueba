@@ -57,6 +57,7 @@ async function configurarVistaSegunRol(rol) {
     pDom.style.display = 'block';
     cargarVistaDomiciliario();
   } else if (rol === 'admin') {
+    // El Administrador ÚNICAMENTE ve su Dashboard de Administrador
     pAdmin.style.display = 'block';
     cargarVistaAdmin();
   } else {
@@ -231,7 +232,7 @@ async function procesarCambioEstado(pedidoId, nuevoEstado) {
   try {
     await cambiarEstadoPedido(pedidoId, nuevoEstado, usuarioActual.id);
     
-    // Mantener OCUPADO durante aceptado y en_camino. Solo pasa a ACTIVO en completado o cancelado
+    // Regla estricta: Permanece 'ocupado' durante aceptado y en_camino
     if (nuevoEstado === 'aceptado' || nuevoEstado === 'en_camino') {
       usuarioActual.profile.estado_servicio = 'ocupado';
     } else {
@@ -259,6 +260,7 @@ async function cargarVistaAdmin() {
   renderizarEstadosDomiciliariosAdmin();
   poblarSelectorDomiciliarios();
 
+  // Escuchar cambios de estado de usuarios en tiempo real para el Admin
   escucharEstadoDomiciliarios(() => {
     cargarVistaAdmin();
   });
